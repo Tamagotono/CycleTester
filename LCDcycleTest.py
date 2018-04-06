@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun Feb  4 17:13:49 2018
-VERSION 1.0
+This Rewrite started April 5th, 2018
+VERSION 1.1
 This is a configurable pulse generator designed for stress-testing PCBAs.
 Developed on a generic ESP8266 development board and an ST7735 LCD display.
 
@@ -28,6 +29,8 @@ TODO:
 NOTE:
     * Using IO pin 2 for the toggle pin is a bad idea. It cycles multiple times during boot
     * Pin 4 seems to be tied to communications... Need to research for better choice of pins
+
+
 """
 
 import st7735, rgb, rgb_text #Display required imports
@@ -35,173 +38,19 @@ import utime, machine #Cycle count required imports
 from micropython import const
 import micropython
 import gc
-gc.enable()
 
-# import importlib  #not available in micropython as of 2/4/2018. this will be a better way to import modules
+def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> str:
+    """
+    Args:
+        milliseconds: The value in milliseconds to format
+        msPrecision: The number of digits to show for the milliseconds portion of the output.
+                     Default = 1
+        verbose: If verbose is True, it will output days, hours, minutes, seconds, milliseconds.
+                 If verbose is False, it will display only the minimum values needed.
+                 Default = False
 
-utime.sleep_ms(500)
-print("booting")
-
-# -------------------------Hardware Config------------------------------#
-
-print("configuring hardware")
-DISPLAY_UPDATE_INTERVAL = const(56) #Do not set below 56 or the display will not update
-TOGGLE_PIN_1 = const(4)
-#TOGGLE_PIN_2 = const(11)
-
-buttonPin = const(0)
-ENCODER_PIN_1 = const(9)
-ENCODER_PIN_2 = const(10)
-
-RED = rgb.color565(255,0,0)
-BLUE = rgb.color565(0,255,0)
-GREEN = rgb.color565(0,0,255)
-BLACK = rgb.color565(0,0,0)
-
-LCDTitle1 = const(0)
-LCDTitle2 = const(10)
-
-LCDParamLine1 = const(25)
-LCDParamLine2 = const(35)
-LCDParamLine3 = const(45)
-LCDParamLine4 = const(55)
-LCDParamLine5 = const(65)
-
-LCDStatusLine1 = const(80)
-LCDStatusLine2 = const(90)
-LCDStatusLine3 = const(100)
-# -----------------------------------------------------------#
-
-# ---------------------------Setup--------------------------------#
-print("performing Setup")
-togglePin = machine.Pin(TOGGLE_PIN_1, machine.Pin.OUT, machine.Pin.PULL_UP) #Pulls the LCD Reset(rst) pin high.
-button = machine.Pin(buttonPin, machine.Pin.IN, machine.Pin.PULL_UP)
-
-display = st7735.ST7735R(machine.SPI(1, baudrate=10000000),
-                         dc=machine.Pin(12),
-                         cs=machine.Pin(15),
-                         rst=machine.Pin(16))
-
-display.fill( rgb.color565(0,0,0) )
-
-# -----------------------------------------------------------#
-
-# -----------------------------------------------------------#
-def loadTestSettings(TestConfigFile):
-    global  TEST_NAME_1, TEST_NAME_2,\
-            NUMBER_OF_CYCLES,\
-            PULSE_WIDTH_ms, DUTY_CYCLE,\
-            ON_TIME_ms, OFF_TIME_ms,\
-            INVERTED
-
-    TestConfig = __import__(TestConfigFile)
-
-    TEST_NAME_1 = TestConfig.TEST_NAME_1
-    TEST_NAME_2 = TestConfig.TEST_NAME_2
-    NUMBER_OF_CYCLES = TestConfig.NUMBER_OF_CYCLES
-    PULSE_WIDTH_ms = TestConfig.PULSE_WIDTH_ms
-    DUTY_CYCLE = TestConfig.DUTY_CYCLE
-    ON_TIME_ms  = TestConfig.ON_TIME_ms
-    OFF_TIME_ms = TestConfig.OFF_TIME_ms
-    INVERTED = TestConfig.INVERTED
-
-def format(PULSE_WIDTH_ms=1000, DUTY_CYCLE=50, ON_TIME_ms=250, OFF_TIME_ms=100):
-    '''This function properly configures the ON_TIME_ms and OFF_TIME_ms based on the configuration settings given '''
-    if PULSE_WIDTH_ms != 0:
-        ON_TIME_ms = int(PULSE_WIDTH_ms*(DUTY_CYCLE/100))
-        OFF_TIME_ms = int(PULSE_WIDTH_ms-ON_TIME_ms)
-    else:
-        ON_TIME_ms = int(ON_TIME_ms)
-        OFF_TIME_ms = int(OFF_TIME_ms)
-        PULSE_WIDTH_ms = int(ON_TIME_ms+OFF_TIME_ms)
-        DUTY_CYCLE = trunc(((ON_TIME_ms/PULSE_WIDTH_ms)*100),2)
-
-    time=( (ON_TIME_ms+OFF_TIME_ms)*NUMBER_OF_CYCLES )
-
-    printLCD("PW  = "+prettyTime(PULSE_WIDTH_ms), Y=LCDParamLine1 )
-    printLCD("DS  = "+str(DUTY_CYCLE)+"%", Y=LCDParamLine2 )
-    printLCD("ON  = "+prettyTime(ON_TIME_ms, 3), Y=LCDParamLine3 )
-    printLCD("OFF = "+prettyTime(OFF_TIME_ms, 3), Y=LCDParamLine4 )
-    printLCD("Time= "+prettyTime(time, 3), Y=LCDParamLine5 )
-
-    global enable, disable
-    if INVERTED == True:
-        enable  = togglePin.off
-        disable = togglePin.on
-    else:
-        enable  = togglePin.on
-        disable = togglePin.off
-
-    gc.collect()
-    return ( ON_TIME_ms, OFF_TIME_ms )
-
-def readI(seconds):
-    printLCD("Enabling DC power",Y=LCDStatusLine1)
-    enable()
-    printLCD("Dwell for "+ str(seconds) + " seconds",Y=LCDStatusLine2)
-    utime.sleep_ms(seconds*1000) #allow time for the readings to stabilize
-    printLCD("Take measurement now",Y=LCDStatusLine1, Background=0xaaaa)
-    printLCD("Press Button",Y=LCDStatusLine2, Background=0x0)
-    printLCD("",Y=LCDStatusLine3, Background=0x0)
-    while button.value() == 1:
-        utime.sleep_ms(50)
-    printLCD("", Y=LCDStatusLine1)
-    printLCD("", Y=LCDStatusLine2)
-    printLCD("", Y=LCDStatusLine3)
-    return
-
-def killPower():
-    disable()
-    printLCD("Power is off", Y=LCDStatusLine1)
-    printLCD("load/unload PCBA", Y=LCDStatusLine2)
-    printLCD("Press button", Y=LCDStatusLine3)
-    while button.value() == 1:
-        utime.sleep_ms(50)
-    printLCD("", Y=LCDStatusLine1)
-    printLCD("", Y=LCDStatusLine2)
-    printLCD("", Y=LCDStatusLine3)
-    return
-
-def keepPowerOn():
-    disable()
-    printLCD("Press button to", Y=LCDStatusLine2)
-    printLCD("turn power off", Y=LCDStatusLine3)
-    while button.value() == 1:
-        utime.sleep_ms(50)
-    printLCD("", Y=LCDStatusLine1)
-    printLCD("", Y=LCDStatusLine2)
-    printLCD("", Y=LCDStatusLine3)
-
-    return    
-
-def cycle(ON_TIME_ms, OFF_TIME_ms):
-    enable()
-    utime.sleep_ms(ON_TIME_ms)
-    disable()
-    utime.sleep_ms(OFF_TIME_ms)
-    gc.collect()
-
-def printLCD(text, X=0, Y=0, Background=0x0000, Color=0xffff ):
-    text = str(text)
-    (rgb_text.text(display, text, x=X, y=Y, color=Color, background=Background))
-
-def trunc(num, digits=1):
-    '''Truncate a number to a specified number of decimal positions
-    num = int or float (kinda pointless for an int...)
-    digits = int (if a float is given, it is converted to an int.
-    Returns: float'''
-    digits=int(digits)
-    if digits>0:
-        mult=int(10**digits)
-        truncNum = int(num * mult) / float(mult)# left shift, chop, right shift
-    else:
-        truncNum = int(num)
-    return truncNum
-
-def prettyTime(milliseconds, msPrecision=1, verbose=False):
-    '''convert milliseconds to a pretty output.
-    If verbose is True, it will output days, hours, minutes, seconds, milliseconds
-    If verbose is False, it will display only the minimum values needed'''
+    Returns: A string with the converted time in human readable format with the precision specified.
+    """
     seconds, milliseconds = divmod(milliseconds, 1000)
     minutes, seconds = divmod(seconds, 60)
     hours, minutes = divmod(minutes, 60)
@@ -209,7 +58,7 @@ def prettyTime(milliseconds, msPrecision=1, verbose=False):
     weeks, days = divmod(days, 7)
     years, weeks = divmod(weeks, 52)
 
-    time=str("%1dy %1dw %1dd" % (years, weeks, days))
+    time:=str("%1dy %1dw %1dd" % (years, weeks, days))
     if verbose == False:
         if years == 0:
             time=str("%1dw %1dd %1dh" % (weeks, days, hours))
@@ -227,117 +76,143 @@ def prettyTime(milliseconds, msPrecision=1, verbose=False):
         time=str("%1dy %1dw %1dd %1dh %02dm %02ds.%3ds" % (years, weeks, days, hours, minutes, seconds, milliseconds))
     return time
 
-def lcd_title_area():
-    display.fill_rectangle(0,0,128,18, rgb.color565(255,0,0) )
-    printLCD(TEST_NAME_1, Y=LCDTitle1, Background=BLUE)
-    printLCD(TEST_NAME_2, Y=LCDTitle2, Background=BLUE)
+class GUI2LCD:
+    """
+    Args:
 
-def lcd_param_area():
-    display.fill_rectangle(20,0,128,70, rgb.color565(0,0,0) )
-    printLCD(TEST_NAME_1, Y=LCDTitle1, Background=BLACK)
-    printLCD(TEST_NAME_2, Y=LCDTitle2, Background=BLACK)
-
-def lcd_status_area():
-    display.fill_rectangle(0,0,128,18, rgb.color565(255,0,0) )
-    printLCD(TEST_NAME_1, Y=LCDTitle1, Background=BLUE)
-    printLCD(TEST_NAME_2, Y=LCDTitle2, Background=BLUE)
-
-def performTest():
-    updatesDisabled = False
-
-    def updateDisplay(count):
-        if updatesDisabled == True:
-            return
-        printLCD(str(count) + " of " + str(NUMBER_OF_CYCLES) ,Y=LCDStatusLine2)
-        rt=( (ON_TIME_ms + OFF_TIME_ms)*(NUMBER_OF_CYCLES-count) ) # rt stands for Remaining Time
-        rt=prettyTime(rt, verbose=False)
-        printLCD("Left:" + str(rt), Y=LCDStatusLine3 )
-
-    printLCD("Test in progress",Y=LCDStatusLine1)
-    if ON_TIME_ms < DISPLAY_UPDATE_INTERVAL and OFF_TIME_ms < DISPLAY_UPDATE_INTERVAL:
-        printLCD("Updates Disabled", Y=LCDStatusLine2)
-        printLCD("Cycles= "+ str(NUMBER_OF_CYCLES),Y=LCDStatusLine3)
-        updatesDisabled = True
-    else:
-        updateDisplay(NUMBER_OF_CYCLES)
-
-    displayUpdateDue=utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
-    displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
-
-    for count in range(NUMBER_OF_CYCLES):
-        count+=1
-        waiting=True
-        deadline = utime.ticks_add(utime.ticks_ms(), +ON_TIME_ms)
-
-        enable()
-        while waiting == True:
-            msRemaining = utime.ticks_diff(utime.ticks_ms(), deadline)
-            if msRemaining <= -1: # the -1 is to allow for calculation time
-                displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
-                if displayUpdateRemaining >= 0 and msRemaining <-55: # defer the update if there is not enough time before the next toggle state change
-                    updateDisplay(count)
-                    displayUpdateDue=utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
-            else:
-                waiting = False
-
-        disable()
-        waiting = True
-        deadline = utime.ticks_add(utime.ticks_ms(), +OFF_TIME_ms)
-        while waiting == True:
-            msRemaining = utime.ticks_diff(utime.ticks_ms(), deadline)
-            if msRemaining <= -1: # the -1 is to allow for calculation time
-                displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
-                if  displayUpdateRemaining >= 0 and msRemaining <-55: # defer the update if there is not enough time before the next toggle state change
-                    updateDisplay(count)
-                    displayUpdateDue=utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
-            else:
-                waiting = False
-
-    updateDisplay(count)
+    Note:
+        Used to convert generic display changes to LCD Driver commands.
+        This should make it easier to adapt to various displays.
+    """
 
 
+class UI:
+    """
+    Args:
+        title_size (int): The number of lines for the Title section. Default = 1
 
-# -----------------------------------------------------------#
-gc.collect()
+        nav_size (int): The number of lines for the Navigation section. Set to 0 for test UIs. Default = 0
 
-machine.freq(80000000)
-#machine.freq(160000000)
+        parameter_size (int): The number of lines for the Parameter section. Set to 0 for menu UIs. Default = 4
 
-TestConfigFile = 'PCBA-32109Rev6'
-#TestConfigFile = 'PCBA-31334'
-#TestConfigFile = 'fastTest'
-#TestConfigFile = 'superFastTest'
-loadTestSettings(TestConfigFile)
+        status_size (int): The number of lines for the Status section. Set to 0 for menu UIs. Default = 3
 
-lcd_title_area()
+        notification_size (int): The number of lines for the Notification section. Default = 1
 
-ON_TIME_ms, OFF_TIME_ms  = format(PULSE_WIDTH_ms, DUTY_CYCLE, ON_TIME_ms, OFF_TIME_ms)
+    Note:
+        This is the display for a specific test / menu. All calls to change the
+        information on the screen need to go through the GUI2LCD instance.
+    """
+    def __init__(self,
+                 title_size: int = 1,
+                 nav_size: int = 0,
+                 parameter_size: int = 4,
+                 status_size: int = 3,
+                 notification_size: int = 1
+                 ):
 
-killPower() #remove power to make it safe to unload the pcbas
-#readI(5) #current measurement step
+    def lcd_title_area():
+        display.fill_rectangle(0, 0, 128, 18, rgb.color565(255, 0, 0))
+        printLCD(TEST_NAME_1, Y=LCDTitle1, Background=BLUE)
+        printLCD(TEST_NAME_2, Y=LCDTitle2, Background=BLUE)
 
-#print (micropython.mem_info())
-performTest()
+    def lcd_param_area():
+        display.fill_rectangle(20, 0, 128, 70, rgb.color565(0, 0, 0))
+        printLCD(TEST_NAME_1, Y=LCDTitle1, Background=BLACK)
+        printLCD(TEST_NAME_2, Y=LCDTitle2, Background=BLACK)
 
-keepPowerOn()
-#readI(5) #read current and leave power on
-killPower() #remove power to make it safe to unload the pcbas
-machine.reset()
+    def lcd_status_area():
+        display.fill_rectangle(0, 0, 128, 18, rgb.color565(255, 0, 0))
+        printLCD(TEST_NAME_1, Y=LCDTitle1, Background=BLUE)
+        printLCD(TEST_NAME_2, Y=LCDTitle2, Background=BLUE)
+
+
+class Test:
+    """
+    Args:
+
+    Note:
+        Defines the parameters of the test
+    """
+    pass
+
+class Relay(machine.Signal):
+    """
+    Notes:
+        Adds extra feature to the machine.Signal class
+
+    Adds:
+        toggle: Inverts the current state of the pin.
+    """
+    def __init__(self, gpio_pin_number: int, inverted=False):
+        super().__init__(gpio_pin_number, inverted)
+
+    def toggle(self):
+        self.value(not self.value())
+
+
+class Button:
+    def __init__(self, gpio_pin_number: int):
+        self.gpio_pin = machine.Pin(gpio_pin_number, machine.Pin.IN, machine.Pin.PULL_UP)
+    pass
+
+class Encoder:
+    pass
 
 
 
 
 
 
+if __name__ == __main__:
+    gc.enable()
+    gc.collect()
 
+    machine.freq(80000000)
+    print("configuring hardware")
+    DISPLAY_UPDATE_INTERVAL = const(56)  # Do not set below 56 or the display will not update
+    TOGGLE_PIN_1 = const(4)
+    # TOGGLE_PIN_2 = const(11)
 
-# my cheatsheet...
-#display.fill( rgb.color565(255,255,0) )
-#display.fill_rectangle(30,10,40,60, rgb.color565(0,0,255) )
-#display.hline(100,100,20, rgb.color565(0,255,0) )
+    buttonPin = const(0)
+    ENCODER_PIN_1 = const(9)
+    ENCODER_PIN_2 = const(10)
 
-#rgb_text.text(display, "hello my name is", color=0xffff, background=0x1111)
+    RED = rgb.color565(255, 0, 0)
+    BLUE = rgb.color565(0, 255, 0)
+    GREEN = rgb.color565(0, 0, 255)
+    BLACK = rgb.color565(0, 0, 0)
 
-#import micropython; micropython.mem_info()
+    LCDTitle1 = const(0)
+    LCDTitle2 = const(10)
 
+    LCDParamLine1 = const(25)
+    LCDParamLine2 = const(35)
+    LCDParamLine3 = const(45)
+    LCDParamLine4 = const(55)
+    LCDParamLine5 = const(65)
 
+    LCDStatusLine1 = const(80)
+    LCDStatusLine2 = const(90)
+    LCDStatusLine3 = const(100)
+
+    TestConfigFile = 'PCBA-32109Rev6'
+    # TestConfigFile = 'PCBA-31334'
+    # TestConfigFile = 'fastTest'
+    # TestConfigFile = 'superFastTest'
+    loadTestSettings(TestConfigFile)
+
+    lcd_title_area()
+
+    ON_TIME_ms, OFF_TIME_ms = format(PULSE_WIDTH_ms, DUTY_CYCLE, ON_TIME_ms, OFF_TIME_ms)
+
+    killPower()  # remove power to make it safe to unload the pcbas
+    # readI(5) #current measurement step
+
+    # print (micropython.mem_info())
+    performTest()
+
+    keepPowerOn()
+    # readI(5) #read current and leave power on
+    killPower()  # remove power to make it safe to unload the pcbas
+    machine.reset()
