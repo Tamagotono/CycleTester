@@ -77,126 +77,125 @@ print("performing Setup")
 ###togglePin = machine.Pin(TOGGLE_PIN_1, machine.Pin.OUT, machine.Pin.PULL_UP) #Pulls the LCD Reset(rst) pin high.
 ###button = machine.Pin(buttonPin, machine.Pin.IN, machine.Pin.PULL_UP)
 
-display = st7735.ST7735R(machine.SPI(1, baudrate=10000000),
-                         dc=machine.Pin(12),
-                         cs=machine.Pin(15),
-                         rst=machine.Pin(16))
-
-display.fill( rgb.color565(0,0,0) )
-
-# -----------------------------------------------------------#
+# display = st7735.ST7735R(machine.SPI(1, baudrate=10000000),
+#                          dc=machine.Pin(12),
+#                          cs=machine.Pin(15),
+#                          rst=machine.Pin(16))
+#
+# display.fill( rgb.color565(0,0,0) )
 
 # -----------------------------------------------------------#
-def loadTestSettings(TestConfigFile):
-    global  TEST_NAME_1, TEST_NAME_2,\
-            NUMBER_OF_CYCLES,\
-            PULSE_WIDTH_ms, DUTY_CYCLE,\
-            ON_TIME_ms, OFF_TIME_ms,\
-            INVERTED
 
-    TestConfig = __import__(TestConfigFile)
+# -----------------------------------------------------------#
+# def loadTestSettings(TestConfigFile):
+#     global  TEST_NAME_1, TEST_NAME_2,\
+#             NUMBER_OF_CYCLES,\
+#             PULSE_WIDTH_ms, DUTY_CYCLE,\
+#             ON_TIME_ms, OFF_TIME_ms,\
+#             INVERTED
+#
+#     TestConfig = __import__(TestConfigFile)
+#
+#     TEST_NAME_1 = TestConfig.TEST_NAME_1
+#     TEST_NAME_2 = TestConfig.TEST_NAME_2
+#     NUMBER_OF_CYCLES = TestConfig.NUMBER_OF_CYCLES
+#     PULSE_WIDTH_ms = TestConfig.PULSE_WIDTH_ms
+#     DUTY_CYCLE = TestConfig.DUTY_CYCLE
+#     ON_TIME_ms  = TestConfig.ON_TIME_ms
+#     OFF_TIME_ms = TestConfig.OFF_TIME_ms
+#     INVERTED = TestConfig.INVERTED
 
-    TEST_NAME_1 = TestConfig.TEST_NAME_1
-    TEST_NAME_2 = TestConfig.TEST_NAME_2
-    NUMBER_OF_CYCLES = TestConfig.NUMBER_OF_CYCLES
-    PULSE_WIDTH_ms = TestConfig.PULSE_WIDTH_ms
-    DUTY_CYCLE = TestConfig.DUTY_CYCLE
-    ON_TIME_ms  = TestConfig.ON_TIME_ms
-    OFF_TIME_ms = TestConfig.OFF_TIME_ms
-    INVERTED = TestConfig.INVERTED
+# def format(PULSE_WIDTH_ms=1000, DUTY_CYCLE=50, ON_TIME_ms=250, OFF_TIME_ms=100):
+#     '''This function properly configures the ON_TIME_ms and OFF_TIME_ms based on the configuration settings given '''
+#     if PULSE_WIDTH_ms != 0:
+#         ON_TIME_ms = int(PULSE_WIDTH_ms*(DUTY_CYCLE/100))
+#         OFF_TIME_ms = int(PULSE_WIDTH_ms-ON_TIME_ms)
+#     else:
+#         ON_TIME_ms = int(ON_TIME_ms)
+#         OFF_TIME_ms = int(OFF_TIME_ms)
+#         PULSE_WIDTH_ms = int(ON_TIME_ms+OFF_TIME_ms)
+#         DUTY_CYCLE = trunc(((ON_TIME_ms/PULSE_WIDTH_ms)*100),2)
+#
+#     time=( (ON_TIME_ms+OFF_TIME_ms)*NUMBER_OF_CYCLES )
+#
+#     printLCD("PW  = "+prettyTime(PULSE_WIDTH_ms), Y=LCDParamLine1 )
+#     printLCD("DS  = "+str(DUTY_CYCLE)+"%", Y=LCDParamLine2 )
+#     printLCD("ON  = "+prettyTime(ON_TIME_ms, 3), Y=LCDParamLine3 )
+#     printLCD("OFF = "+prettyTime(OFF_TIME_ms, 3), Y=LCDParamLine4 )
+#     printLCD("Time= "+prettyTime(time, 3), Y=LCDParamLine5 )
+#
+#     global enable, disable
+#     if INVERTED == True:
+#         enable  = togglePin.off
+#         disable = togglePin.on
+#     else:
+#         enable  = togglePin.on
+#         disable = togglePin.off
+#
+#     gc.collect()
+#     return ( ON_TIME_ms, OFF_TIME_ms )
 
-def format(PULSE_WIDTH_ms=1000, DUTY_CYCLE=50, ON_TIME_ms=250, OFF_TIME_ms=100):
-    '''This function properly configures the ON_TIME_ms and OFF_TIME_ms based on the configuration settings given '''
-    if PULSE_WIDTH_ms != 0:
-        ON_TIME_ms = int(PULSE_WIDTH_ms*(DUTY_CYCLE/100))
-        OFF_TIME_ms = int(PULSE_WIDTH_ms-ON_TIME_ms)
-    else:
-        ON_TIME_ms = int(ON_TIME_ms)
-        OFF_TIME_ms = int(OFF_TIME_ms)
-        PULSE_WIDTH_ms = int(ON_TIME_ms+OFF_TIME_ms)
-        DUTY_CYCLE = trunc(((ON_TIME_ms/PULSE_WIDTH_ms)*100),2)
+# def readI(seconds):
+#     printLCD("Enabling DC power",Y=LCDStatusLine1)
+#     enable()
+#     printLCD("Dwell for "+ str(seconds) + " seconds",Y=LCDStatusLine2)
+#     utime.sleep_ms(seconds*1000) #allow time for the readings to stabilize
+#     printLCD("Take measurement now",Y=LCDStatusLine1, Background=0xaaaa)
+#     printLCD("Press Button",Y=LCDStatusLine2, Background=0x0)
+#     printLCD("",Y=LCDStatusLine3, Background=0x0)
+#     while button.value() == 1:
+#         utime.sleep_ms(50)
+#     printLCD("", Y=LCDStatusLine1)
+#     printLCD("", Y=LCDStatusLine2)
+#     printLCD("", Y=LCDStatusLine3)
+#     return
+#
+# def killPower():
+#     disable()
+#     printLCD("Power is off", Y=LCDStatusLine1)
+#     printLCD("load/unload PCBA", Y=LCDStatusLine2)
+#     printLCD("Press button", Y=LCDStatusLine3)
+#     while button.value() == 1:
+#         utime.sleep_ms(50)
+#     printLCD("", Y=LCDStatusLine1)
+#     printLCD("", Y=LCDStatusLine2)
+#     printLCD("", Y=LCDStatusLine3)
+#     return
+#
+# def keepPowerOn():
+#     disable()
+#     printLCD("Press button to", Y=LCDStatusLine2)
+#     printLCD("turn power off", Y=LCDStatusLine3)
+#     while button.value() == 1:
+#         utime.sleep_ms(50)
+#     printLCD("", Y=LCDStatusLine1)
+#     printLCD("", Y=LCDStatusLine2)
+#     printLCD("", Y=LCDStatusLine3)
+#     return
+#
+# def cycle(ON_TIME_ms, OFF_TIME_ms):
+#     enable()
+#     utime.sleep_ms(ON_TIME_ms)
+#     disable()
+#     utime.sleep_ms(OFF_TIME_ms)
+#     gc.collect()
 
-    time=( (ON_TIME_ms+OFF_TIME_ms)*NUMBER_OF_CYCLES )
+# def printLCD(text, X=0, Y=0, Background=0x0000, Color=0xffff ):
+#     text = str(text)
+#     (rgb_text.text(display, text, x=X, y=Y, color=Color, background=Background))
 
-    printLCD("PW  = "+prettyTime(PULSE_WIDTH_ms), Y=LCDParamLine1 )
-    printLCD("DS  = "+str(DUTY_CYCLE)+"%", Y=LCDParamLine2 )
-    printLCD("ON  = "+prettyTime(ON_TIME_ms, 3), Y=LCDParamLine3 )
-    printLCD("OFF = "+prettyTime(OFF_TIME_ms, 3), Y=LCDParamLine4 )
-    printLCD("Time= "+prettyTime(time, 3), Y=LCDParamLine5 )
-
-    global enable, disable
-    if INVERTED == True:
-        enable  = togglePin.off
-        disable = togglePin.on
-    else:
-        enable  = togglePin.on
-        disable = togglePin.off
-
-    gc.collect()
-    return ( ON_TIME_ms, OFF_TIME_ms )
-
-def readI(seconds):
-    printLCD("Enabling DC power",Y=LCDStatusLine1)
-    enable()
-    printLCD("Dwell for "+ str(seconds) + " seconds",Y=LCDStatusLine2)
-    utime.sleep_ms(seconds*1000) #allow time for the readings to stabilize
-    printLCD("Take measurement now",Y=LCDStatusLine1, Background=0xaaaa)
-    printLCD("Press Button",Y=LCDStatusLine2, Background=0x0)
-    printLCD("",Y=LCDStatusLine3, Background=0x0)
-    while button.value() == 1:
-        utime.sleep_ms(50)
-    printLCD("", Y=LCDStatusLine1)
-    printLCD("", Y=LCDStatusLine2)
-    printLCD("", Y=LCDStatusLine3)
-    return
-
-def killPower():
-    disable()
-    printLCD("Power is off", Y=LCDStatusLine1)
-    printLCD("load/unload PCBA", Y=LCDStatusLine2)
-    printLCD("Press button", Y=LCDStatusLine3)
-    while button.value() == 1:
-        utime.sleep_ms(50)
-    printLCD("", Y=LCDStatusLine1)
-    printLCD("", Y=LCDStatusLine2)
-    printLCD("", Y=LCDStatusLine3)
-    return
-
-def keepPowerOn():
-    disable()
-    printLCD("Press button to", Y=LCDStatusLine2)
-    printLCD("turn power off", Y=LCDStatusLine3)
-    while button.value() == 1:
-        utime.sleep_ms(50)
-    printLCD("", Y=LCDStatusLine1)
-    printLCD("", Y=LCDStatusLine2)
-    printLCD("", Y=LCDStatusLine3)
-
-    return
-
-def cycle(ON_TIME_ms, OFF_TIME_ms):
-    enable()
-    utime.sleep_ms(ON_TIME_ms)
-    disable()
-    utime.sleep_ms(OFF_TIME_ms)
-    gc.collect()
-
-def printLCD(text, X=0, Y=0, Background=0x0000, Color=0xffff ):
-    text = str(text)
-    (rgb_text.text(display, text, x=X, y=Y, color=Color, background=Background))
-
-def trunc(num, digits=1):
-    '''Truncate a number to a specified number of decimal positions
-    num = int or float (kinda pointless for an int...)
-    digits = int (if a float is given, it is converted to an int.
-    Returns: float'''
-    digits=int(digits)
-    if digits>0:
-        mult=int(10**digits)
-        truncNum = int(num * mult) / float(mult)# left shift, chop, right shift
-    else:
-        truncNum = int(num)
-    return truncNum
+# def truncate(num, digits=1):
+#     '''Truncate a number to a specified number of decimal positions
+#     num = int or float (kinda pointless for an int...)
+#     digits = int (if a float is given, it is converted to an int.
+#     Returns: float'''
+#     digits=int(digits)
+#     if digits>0:
+#         mult=int(10**digits)
+#         truncNum = int(num * mult) / float(mult)# left shift, chop, right shift
+#     else:
+#         truncNum = int(num)
+#     return truncNum
 
 # def prettyTime(milliseconds, msPrecision=1, verbose=False):
 #     '''convert milliseconds to a pretty output.
@@ -222,7 +221,7 @@ def trunc(num, digits=1):
 #                         if minutes == 0:
 #                             time=str("%04.2fs" % (seconds+(milliseconds/1000)))
 #                             if seconds == 0:
-#                                 time=str("%1dms" % (trunc(milliseconds, digits=msPrecision)))
+#                                 time=str("%1dms" % (truncate(milliseconds, digits=msPrecision)))
 #     else:
 #         time=str("%1dy %1dw %1dd %1dh %02dm %02ds.%3ds" % (years, weeks, days, hours, minutes, seconds, milliseconds))
 #     return time
@@ -242,58 +241,58 @@ def trunc(num, digits=1):
 #     printLCD(TEST_NAME_1, Y=LCDTitle1, Background=BLUE)
 #     printLCD(TEST_NAME_2, Y=LCDTitle2, Background=BLUE)
 
-def performTest():
-    updatesDisabled = False
-
-    def updateDisplay(count):
-        if updatesDisabled == True:
-            return
-        printLCD(str(count) + " of " + str(NUMBER_OF_CYCLES) ,Y=LCDStatusLine2)
-        rt=( (ON_TIME_ms + OFF_TIME_ms)*(NUMBER_OF_CYCLES-count) ) # rt stands for Remaining Time
-        rt=prettyTime(rt, verbose=False)
-        printLCD("Left:" + str(rt), Y=LCDStatusLine3 )
-
-    printLCD("Test in progress",Y=LCDStatusLine1)
-    if ON_TIME_ms < DISPLAY_UPDATE_INTERVAL and OFF_TIME_ms < DISPLAY_UPDATE_INTERVAL:
-        printLCD("Updates Disabled", Y=LCDStatusLine2)
-        printLCD("Cycles= "+ str(NUMBER_OF_CYCLES),Y=LCDStatusLine3)
-        updatesDisabled = True
-    else:
-        updateDisplay(NUMBER_OF_CYCLES)
-
-    displayUpdateDue=utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
-    displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
-
-    for count in range(NUMBER_OF_CYCLES):
-        count+=1
-        waiting=True
-        deadline = utime.ticks_add(utime.ticks_ms(), +ON_TIME_ms)
-
-        enable()
-        while waiting == True:
-            msRemaining = utime.ticks_diff(utime.ticks_ms(), deadline)
-            if msRemaining <= -1: # the -1 is to allow for calculation time
-                displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
-                if displayUpdateRemaining >= 0 and msRemaining <-55: # defer the update if there is not enough time before the next toggle state change
-                    updateDisplay(count)
-                    displayUpdateDue=utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
-            else:
-                waiting = False
-
-        disable()
-        waiting = True
-        deadline = utime.ticks_add(utime.ticks_ms(), +OFF_TIME_ms)
-        while waiting == True:
-            msRemaining = utime.ticks_diff(utime.ticks_ms(), deadline)
-            if msRemaining <= -1: # the -1 is to allow for calculation time
-                displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
-                if  displayUpdateRemaining >= 0 and msRemaining <-55: # defer the update if there is not enough time before the next toggle state change
-                    updateDisplay(count)
-                    displayUpdateDue=utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
-            else:
-                waiting = False
-
-    updateDisplay(count)
+# def performTest():
+#     updatesDisabled = False
+#
+#     def updateDisplay(count):
+#         if updatesDisabled == True:
+#             return
+#         printLCD(str(count) + " of " + str(NUMBER_OF_CYCLES) ,Y=LCDStatusLine2)
+#         rt=( (ON_TIME_ms + OFF_TIME_ms)*(NUMBER_OF_CYCLES-count) ) # rt stands for Remaining Time
+#         rt=prettyTime(rt, verbose=False)
+#         printLCD("Left:" + str(rt), Y=LCDStatusLine3 )
+#
+#     printLCD("Test in progress",Y=LCDStatusLine1)
+#     if ON_TIME_ms < DISPLAY_UPDATE_INTERVAL and OFF_TIME_ms < DISPLAY_UPDATE_INTERVAL:
+#         printLCD("Updates Disabled", Y=LCDStatusLine2)
+#         printLCD("Cycles= "+ str(NUMBER_OF_CYCLES),Y=LCDStatusLine3)
+#         updatesDisabled = True
+#     else:
+#         updateDisplay(NUMBER_OF_CYCLES)
+#
+#     displayUpdateDue=utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
+#     displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
+#
+#     for count in range(NUMBER_OF_CYCLES):
+#         count+=1
+#         waiting=True
+#         deadline = utime.ticks_add(utime.ticks_ms(), +ON_TIME_ms)
+#
+#         enable()
+#         while waiting == True:
+#             msRemaining = utime.ticks_diff(utime.ticks_ms(), deadline)
+#             if msRemaining <= -1: # the -1 is to allow for calculation time
+#                 displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
+#                 if displayUpdateRemaining >= 0 and msRemaining <-55: # defer the update if there is not enough time before the next toggle state change
+#                     updateDisplay(count)
+#                     displayUpdateDue=utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
+#             else:
+#                 waiting = False
+#
+#         disable()
+#         waiting = True
+#         deadline = utime.ticks_add(utime.ticks_ms(), +OFF_TIME_ms)
+#         while waiting == True:
+#             msRemaining = utime.ticks_diff(utime.ticks_ms(), deadline)
+#             if msRemaining <= -1: # the -1 is to allow for calculation time
+#                 displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
+#                 if  displayUpdateRemaining >= 0 and msRemaining <-55: # defer the update if there is not enough time before the next toggle state change
+#                     updateDisplay(count)
+#                     displayUpdateDue=utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
+#             else:
+#                 waiting = False
+#
+#     updateDisplay(count)
 
 
 
