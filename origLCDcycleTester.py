@@ -28,6 +28,7 @@ TODO:
 NOTE:
     * Using IO pin 2 for the toggle pin is a bad idea. It cycles multiple times during boot
     * Pin 4 seems to be tied to communications... Need to research for better choice of pins
+    * Looks like other projects are using pins 12 and 13 for rotary encoders on ESP8266...
 """
 
 import st7735, rgb, rgb_text #Display required imports
