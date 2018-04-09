@@ -33,11 +33,43 @@ NOTE:
 
 """
 
-import st7735, rgb, rgb_text #Display required imports
+import machine, display, time, _thread, math
+import m5stack
 import utime, machine #Cycle count required imports
 from micropython import const
-import micropython
 import gc
+
+tft = display.TFT()
+
+# --- Select correct configuration ---
+
+# M5Stack:
+# tft.init(tft.M5STACK,
+#          width=240,
+#          height=320,
+#          spihost=tft.HSPI,
+#          speed=40000000,
+#          rst_pin=33, backl_pin=32, miso=19, mosi=23, clk=18, cs=14, dc=27,
+#          bgr=True,
+#          backl_on=1
+#          )
+
+tft = m5stack.Display()
+
+# Some others...
+# ESP32-WROVER-KIT v3:
+
+#tft.init(tft.ST7789, rst_pin=18, backl_pin=5, miso=25, mosi=23, clk=19, cs=22, dc=21)
+
+# Adafruit TFT FeatherWing:
+#tft.init(tft.ILI9341, width=240, height=320, miso=19, mosi=18, clk=5, cs=15, dc=33, bgr=True, hastouch=tft.TOUCH_STMPE, tcs=32)
+
+#tft.init(tft.ILI9341, width=240, height=320, miso=19,mosi=23,clk=18,cs=5,dc=26,tcs=27,hastouch=True, bgr=True)
+#tft.init(tft.ST7735R, speed=10000000, spihost=tft.HSPI, mosi=13, miso=12, clk=14, cs=15, dc=27, rst_pin=26, hastouch=False, bgr=False, width=128, height=160)
+
+
+
+#import st7735, rgb, rgb_text #Display required imports
 
 class UI:
     """
@@ -242,7 +274,8 @@ def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> st
     weeks, days = divmod(days, 7)
     years, weeks = divmod(weeks, 52)
 
-    time:=str("%1dy %1dw %1dd" % (years, weeks, days))
+    #time:=str("%1dy %1dw %1dd" % (years, weeks, days))
+    time:=str(f'{years} {weeks} {days}')
     if verbose == False:
         if years == 0:
             time=str("%1dw %1dd %1dh" % (weeks, days, hours))
@@ -349,6 +382,11 @@ def load_test_settings(TestConfigFile):
     OFF_TIME_ms = TestConfig.OFF_TIME_ms
     INVERTED = TestConfig.INVERTED
 
+def m5():
+    a = m5stack.ButtonA(callback=button_hander_a)
+    b = m5stack.ButtonB(callback=button_hander_b)
+    c = m5stack.ButtonC(callback=button_hander_c)
+
 
 if __name__ == __main__:
     gc.enable()
@@ -356,6 +394,7 @@ if __name__ == __main__:
 
     machine.freq(80000000)
     print("configuring hardware")
+
     DISPLAY_UPDATE_INTERVAL = const(56)  # Do not set below 56 or the display will not update
     TOGGLE_PIN_1 = const(4)
     # TOGGLE_PIN_2 = const(11)
