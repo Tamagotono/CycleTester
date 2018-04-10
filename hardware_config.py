@@ -2,16 +2,12 @@
 def M5stack():
     import m5stack
     import display
+    import machine
+
     tft = display.TFT()
-    tft.init(tft.M5STACK,
-             width=240,
-             height=320,
-             spihost=tft.HSPI,
-             speed=40000000,
-             rst_pin=33, backl_pin=32, miso=19, mosi=23, clk=18, cs=14, dc=27,
-             bgr=True,
-             backl_on=1
-             )
+    tft = m5stack.Display(40000000)
+
+    machine.freq(240000000)
 
     m5stack.tone(1, duration=0, volume=0)  # Prevents first tone being at full volume
 
