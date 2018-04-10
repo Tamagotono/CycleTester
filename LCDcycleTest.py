@@ -33,43 +33,16 @@ NOTE:
 
 """
 
-import machine, display, time, _thread, math
-import m5stack
+#import machine, display, time,
+import machine, _thread, math
+#import m5stack
 import utime, machine #Cycle count required imports
 from micropython import const
+import hardware_config
 import gc
 
-tft = display.TFT()
-
-# --- Select correct configuration ---
-
-# M5Stack:
-# tft.init(tft.M5STACK,
-#          width=240,
-#          height=320,
-#          spihost=tft.HSPI,
-#          speed=40000000,
-#          rst_pin=33, backl_pin=32, miso=19, mosi=23, clk=18, cs=14, dc=27,
-#          bgr=True,
-#          backl_on=1
-#          )
-
-tft = m5stack.Display()
-
-# Some others...
-# ESP32-WROVER-KIT v3:
-
-#tft.init(tft.ST7789, rst_pin=18, backl_pin=5, miso=25, mosi=23, clk=19, cs=22, dc=21)
-
-# Adafruit TFT FeatherWing:
-#tft.init(tft.ILI9341, width=240, height=320, miso=19, mosi=18, clk=5, cs=15, dc=33, bgr=True, hastouch=tft.TOUCH_STMPE, tcs=32)
-
-#tft.init(tft.ILI9341, width=240, height=320, miso=19,mosi=23,clk=18,cs=5,dc=26,tcs=27,hastouch=True, bgr=True)
-#tft.init(tft.ST7735R, speed=10000000, spihost=tft.HSPI, mosi=13, miso=12, clk=14, cs=15, dc=27, rst_pin=26, hastouch=False, bgr=False, width=128, height=160)
-
-
-
-#import st7735, rgb, rgb_text #Display required imports
+tft, btn_a, btn_b, btn_c = hardware_config.M5stack()
+machine.freq(160000000)
 
 class UI:
     """
@@ -88,40 +61,75 @@ class UI:
         This is the display for a specific test / menu. All calls to change the
         information on the screen need to go through the GUI2LCD instance.
     """
+    global tft
+
     def __init__(self,
                  title_size: int = 1,
                  nav_size: int = 0,
                  parameter_size: int = 4,
                  status_size: int = 3,
-                 notification_size: int = 1
+                 notification_size: int = 1,
                  ):
-        display = st7735.ST7735R(machine.SPI(1, baudrate=10000000),
-                                 dc=machine.Pin(12),
-                                 cs=machine.Pin(15),
-                                 rst=machine.Pin(16))
-        self.clear_screen()
 
-    def clear_screen(self):
-        display.fill(rgb.color565(0, 0, 0))
+        self.clear()
+        tft.font(tft.FONT_DejaVu24)
 
-    def lcd_title_area():
-        display.fill_rectangle(0, 0, 128, 18, rgb.color565(255, 0, 0))
+
+    def clear(self):
+        tft.clear()
+
+    def header():
+        FRAME_COLOR = tft.BLUE
+        FILL_COLOR = tft.BLUE
+        TEXT_COLOR = 0xffffff
+        HEIGHT = 60
+        text_line_1 = ''
+        text_line_2 = ''
+
+        tft.rect(0, 0, 320, HEIGHT, FRAME_COLOR, FILL_COLOR)
         printLCD(TEST_NAME_1, Y=LCDTitle1, Background=BLUE)
         printLCD(TEST_NAME_2, Y=LCDTitle2, Background=BLUE)
 
-    def lcd_param_area():
-        display.fill_rectangle(20, 0, 128, 70, rgb.color565(0, 0, 0))
+    def test_param():
+        FRAME_COLOR = tft.BLUE
+        FILL_COLOR = tft.BLUE
+        TEXT_COLOR = 0xffffff
+        HEIGHT = 60
+        text_line_1 = ''
+        text_line_2 = ''
+
+        tft.rect(0, 0, 320, 20, tft.RED, tft.RED)
         printLCD(TEST_NAME_1, Y=LCDTitle1, Background=BLACK)
         printLCD(TEST_NAME_2, Y=LCDTitle2, Background=BLACK)
 
-    def lcd_status_area():
-        display.fill_rectangle(0, 0, 128, 18, rgb.color565(255, 0, 0))
+    def test_status():
+        FRAME_COLOR = tft.BLUE
+        FILL_COLOR = tft.BLUE
+        TEXT_COLOR = 0xffffff
+        HEIGHT = 60
+        text_line_1 = ''
+        text_line_2 = ''
+
+        tft.rect(0, 0, 320, 20, tft.RED, tft.RED)
         printLCD(TEST_NAME_1, Y=LCDTitle1, Background=BLUE)
         printLCD(TEST_NAME_2, Y=LCDTitle2, Background=BLUE)
 
-    def printLCD(text, X=0, Y=0, Background=0x0000, Color=0xffff ):
-        text = str(text)
-        (rgb_text.text(display, text, x=X, y=Y, color=Color, background=Background))
+    def footer(self):
+        tft.rect( 25, 210, 80, 30, tft.RED, tft.BLUE)
+        tft.text( 50, 215,   "UP", tft.WHITE, transparent=True)
+
+        tft.rect(120, 210, 80, 30, tft.RED, tft.BLUE)
+        tft.text(120, 215, "DOWN", tft.WHITE, transparent=True)
+
+        tft.rect(215, 210, 80, 30, tft.RED, tft.BLUE)
+        tft.text(235, 215,  "SEL", tft.WHITE, transparent=True)
+
+    def printLCD(text, X=0, Y=0, bg_color=0x000000, text_color=0xffffff, transparent=True):
+        text = str(f'{text}\r')
+        tft.textClear(X, Y, text)
+        tft.text(X, Y, text, text_color, transparent=True)
+
+
 
 class Test:
     """

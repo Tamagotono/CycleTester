@@ -5,35 +5,11 @@ Date:	08/10/2017
 
 """
 
-import machine, display, time, _thread, math
-import m5stack
-tft = display.TFT()
+import machine, time, _thread, math
+import hardware_config
 
-# --- Select correct configuration ---
-
-# ESP32-WROVER-KIT v3:
-#tft.init(tft.ST7789, rst_pin=18, backl_pin=5, miso=25, mosi=23, clk=19, cs=22, dc=21)
-
-# Adafruit TFT FeatherWing:
-#tft.init(tft.ILI9341, width=240, height=320, miso=19, mosi=18, clk=5, cs=15, dc=33, bgr=True, hastouch=tft.TOUCH_STMPE, tcs=32)
-
-# M5Stack:
-# tft.init(tft.M5STACK,
-#          width=240,
-#          height=320,
-#          spihost=tft.HSPI,
-#          speed=40000000,
-#          rst_pin=33, backl_pin=32, miso=19, mosi=23, clk=18, cs=14, dc=27,
-#          bgr=True,
-#          backl_on=1
-#          )
-
-tft = m5stack.Display()
-
-# Some others...
-#tft.init(tft.ILI9341, width=240, height=320, miso=19,mosi=23,clk=18,cs=5,dc=26,tcs=27,hastouch=True, bgr=True)
-#tft.init(tft.ST7735R, speed=10000000, spihost=tft.HSPI, mosi=13, miso=12, clk=14, cs=15, dc=27, rst_pin=26, hastouch=False, bgr=False, width=128, height=160)
-
+tft, btn_a, btn_b, btn_c = hardware_config.M5stack()
+machine.freq(160000000)
 
 def testt():
     while True:
@@ -354,4 +330,10 @@ def dispDemo_th():
         fullDemo(rot=tft.LANDSCAPE_FLIP)
         fullDemo(rot=tft.PORTRAIT_FLIP)
 
-dispth=_thread.start_new_thread("TFTDemo", dispDemo_th, ())
+#dispth=_thread.start_new_thread("TFTDemo", dispDemo_th, ())
+
+while True:
+    fullDemo(rot=tft.LANDSCAPE)
+    fullDemo(rot=tft.PORTRAIT)
+    fullDemo(rot=tft.LANDSCAPE_FLIP)
+    fullDemo(rot=tft.PORTRAIT_FLIP)

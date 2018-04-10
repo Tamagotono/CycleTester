@@ -227,17 +227,17 @@ print("performing Setup")
 #         time=str("%1dy %1dw %1dd %1dh %02dm %02ds.%3ds" % (years, weeks, days, hours, minutes, seconds, milliseconds))
 #     return time
 
-# def lcd_title_area():
+# def header():
 #     display.fill_rectangle(0,0,128,18, rgb.color565(255,0,0) )
 #     printLCD(TEST_NAME_1, Y=LCDTitle1, Background=BLUE)
 #     printLCD(TEST_NAME_2, Y=LCDTitle2, Background=BLUE)
 #
-# def lcd_param_area():
+# def test_param():
 #     display.fill_rectangle(20,0,128,70, rgb.color565(0,0,0) )
 #     printLCD(TEST_NAME_1, Y=LCDTitle1, Background=BLACK)
 #     printLCD(TEST_NAME_2, Y=LCDTitle2, Background=BLACK)
 #
-# def lcd_status_area():
+# def test_status():
 #     display.fill_rectangle(0,0,128,18, rgb.color565(255,0,0) )
 #     printLCD(TEST_NAME_1, Y=LCDTitle1, Background=BLUE)
 #     printLCD(TEST_NAME_2, Y=LCDTitle2, Background=BLUE)
