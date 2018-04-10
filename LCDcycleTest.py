@@ -42,7 +42,6 @@ import hardware_config
 import gc
 
 tft, btn_a, btn_b, btn_c = hardware_config.M5stack()
-machine.freq(160000000)
 
 class UI:
     """
@@ -63,13 +62,7 @@ class UI:
     """
     global tft
 
-    def __init__(self,
-                 title_size: int = 1,
-                 nav_size: int = 0,
-                 parameter_size: int = 4,
-                 status_size: int = 3,
-                 notification_size: int = 1,
-                 ):
+    def __init__(self):
 
         self.clear()
         tft.font(tft.FONT_DejaVu24)
@@ -301,21 +294,24 @@ def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> st
         time=str("%1dy %1dw %1dd %1dh %02dm %02ds.%3ds" % (years, weeks, days, hours, minutes, seconds, milliseconds))
     return time
 
-def truncate(original_number: float, precision: int=1) -> float:
+def truncate(original_number: float, precision: int=1) -> str:
     """
     Args:
         original_number: The float that you want truncated (not rounded)
         precision: Int defining how many decimal places to truncate at.
 
-    Returns: The original float, but truncated to the specified number of decimal places.
+    Returns: The string of the original float, but truncated to the specified number of decimal places.
              Default = 1
+
+    Notes: This has to return a string due to the accuracy in the MCU causing numbers to have too many digits.
     """
     precision=int(precision)
     if precision>0:
-        multiplier=int(10 ** precision)
-        truncated_number = int(original_number * multiplier) / float(multiplier)# left shift, chop, right shift
+        temp = str(float(original_number)).split('.')  # float to force a decimal point, string to split.
+        temp[1] = temp[1]+('0'*precision)  # make sure we have enough digits for the next step.
+        truncated_number = temp[0]+'.'+temp[1][:precision]
     else:
-        truncated_number = int(original_number)
+        truncated_number = str(int(original_number))
     return truncated_number
 
 def cycle(on_time_ms: int, off_time_ms: int, relay: Relay) -> None:
@@ -400,7 +396,6 @@ if __name__ == __main__:
     gc.enable()
     gc.collect()
 
-    machine.freq(80000000)
     print("configuring hardware")
 
     DISPLAY_UPDATE_INTERVAL = const(56)  # Do not set below 56 or the display will not update
