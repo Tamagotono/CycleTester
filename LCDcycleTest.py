@@ -63,167 +63,300 @@ class UI:
     global tft
 
     def __init__(self):
-
-        self.clear()
-        tft.font(tft.FONT_DejaVu24)
-
-
-    def clear(self):
         tft.clear()
+        self.screenwidth, self.screenheight = tft.screensize()
+        self.header = DisplaySection(0,0,40, self.screenwidth,text_color=tft.BLACK, font=tft.FONT_DejaVu24)
+        self.parameters = DisplaySection(0,41,120, self.screenwidth, fill_color=tft.GREEN)
+        self.status = DisplaySection(0,161,60, self.screenwidth, fill_color=tft.YELLOW)
 
-    def header():
-        FRAME_COLOR = tft.BLUE
-        FILL_COLOR = tft.BLUE
-        TEXT_COLOR = 0xffffff
-        HEIGHT = 60
-        text_line_1 = ''
-        text_line_2 = ''
+        self.footer()
 
-        tft.rect(0, 0, 320, HEIGHT, FRAME_COLOR, FILL_COLOR)
-        printLCD(TEST_NAME_1, Y=LCDTitle1, Background=BLUE)
-        printLCD(TEST_NAME_2, Y=LCDTitle2, Background=BLUE)
+        self.__displaytest()
 
-    def test_param():
-        FRAME_COLOR = tft.BLUE
-        FILL_COLOR = tft.BLUE
-        TEXT_COLOR = 0xffffff
-        HEIGHT = 60
-        text_line_1 = ''
-        text_line_2 = ''
+    def __displaytest(self):
+        """
+        FOR TESTING PURPOSES ONLY
+        WILL BE REMOVED BEFORE V1 RELEASE
+        """
 
-        tft.rect(0, 0, 320, 20, tft.RED, tft.RED)
-        printLCD(TEST_NAME_1, Y=LCDTitle1, Background=BLACK)
-        printLCD(TEST_NAME_2, Y=LCDTitle2, Background=BLACK)
+        i = 1
+        while i <= self.header.num_of_lines:
+            self.header.lines[i] = str(3.14159 * i)
+            i += 1
+        self.header.update_all_lines()
 
-    def test_status():
-        FRAME_COLOR = tft.BLUE
-        FILL_COLOR = tft.BLUE
-        TEXT_COLOR = 0xffffff
-        HEIGHT = 60
-        text_line_1 = ''
-        text_line_2 = ''
+        i = 1
+        while i <= self.parameters.num_of_lines:
+            self.parameters.lines[i] = str(3.14159 * i)
+            i += 1
+        self.parameters.update_all_lines()
 
-        tft.rect(0, 0, 320, 20, tft.RED, tft.RED)
-        printLCD(TEST_NAME_1, Y=LCDTitle1, Background=BLUE)
-        printLCD(TEST_NAME_2, Y=LCDTitle2, Background=BLUE)
+        i = 1
+        while i <= self.status.num_of_lines:
+            self.status.lines[i] = str(3.14159 * i)
+            i += 1
+        self.status.update_all_lines()
+
 
     def footer(self):
-        tft.rect( 25, 210, 80, 30, tft.RED, tft.BLUE)
-        tft.text( 50, 215,   "UP", tft.WHITE, transparent=True)
+        tft.rect( 25, 220, 80, 30, tft.BLUE, tft.BLUE)
+        tft.text( 50, 222,   "UP", tft.WHITE, transparent=True)
 
-        tft.rect(120, 210, 80, 30, tft.RED, tft.BLUE)
-        tft.text(120, 215, "DOWN", tft.WHITE, transparent=True)
+        tft.rect(120, 220, 80, 30, tft.BLUE, tft.BLUE)
+        tft.text(120, 222, "DOWN", tft.WHITE, transparent=True)
 
-        tft.rect(215, 210, 80, 30, tft.RED, tft.BLUE)
-        tft.text(235, 215,  "SEL", tft.WHITE, transparent=True)
+        tft.rect(215, 220, 80, 30, tft.BLUE, tft.BLUE)
+        tft.text(230, 222,  "SEL", tft.WHITE, transparent=True)
+
+class DisplaySection:
+    def __init__(self,
+                 x:int,
+                 y:int,
+                 frame_height:int,
+                 frame_width:int,
+                 frame_color:int = tft.WHITE,
+                 fill_color:int = tft.BLUE,
+                 text_color:int = tft.WHITE,
+                 font = tft.FONT_DejaVu18,
+                ):
+
+        self.x = x
+        self.y = y
+        self.frame_width = frame_width
+        self.frame_height = frame_height
+        self.frame_color = frame_color
+        self.fill_color = fill_color
+        self.text_color = text_color
+        self.font = font
+        tft.font(self.font)
+        self.line_height, self.text_y = self.line_height_margin_calc(10)
+        self.num_of_lines = int(self.frame_height / self.line_height)
+        print(str(self.font))
+        # print("self.x = " + str(self.x))
+        # print("self.y = " + str(self.y))
+        # print("self.frameheight = " + str(self.frame_height))
+        # print("lineheight =" + str(self.line_height))
+        # print("num of lines = " + str(self.num_of_lines))
+        self.lines = {}
+
+        tft.set_bg(self.fill_color)
+        tft.set_fg(self.text_color)
+
+        self.create_lines(self.num_of_lines)
+        self.initialize_section()
+
+    def initialize_section(self):
+        tft.font(self.font)
+        tft.rect(self.x, self.y, self.frame_width, self.frame_height, self.frame_color, self.fill_color)
+        self.create_lines(self.num_of_lines)
+        self.update_all_lines()
+
+
+
+    def line_height_margin_calc(self, margin:int = 10) -> int:
+        """
+        Args:
+            margin_pct (int): the percentage of font size for vertical margins
+        Returns:
+            The total hight of the line in pixels
+            The number of pixels used above the font used for margins, to set the vertical offset for text_y
+        """
+        margin_pct = margin/100
+        font_height = int(tft.fontSize()[1])
+        margin_px = int(font_height)
+        line_height_px = int(font_height * (1 + margin_pct))
+#        print("line_height_margin_calc: line_height_px = " + str(line_height_px) + 'margin:' + str(margin/2))
+        return line_height_px, int(margin_px/4)
+
+    def create_lines(self, num_of_lines:int):
+        """
+        Args:
+            num_of_lines (int): initializes the dictionary of the text for each line number
+        Returns:
+            Nothing
+        """
+        line_num = 1
+        while line_num <= num_of_lines:
+            self.lines[line_num] = str(line_num)
+            line_num += 1
+#        print(self.lines.items())
+
+    def update_line(self, line_number:int):
+        """
+        Args:
+            line_number (int): The line number to update on the desplay
+        Returns:
+            Nothing
+        """
+        tft.font(self.font)
+        line_y = (((line_number - 1) * self.line_height) + self.y)
+        text_y = line_y + self.text_y
+        tft.rect(self.x, line_y, self.frame_width, self.line_height, self.fill_color, self.fill_color)
+        tft.text(self.x, text_y, self.lines.get(line_number, "ERROR"),
+                 self.text_color, transparent=True)
+
+    def update_all_lines(self):
+        """
+        Returns:
+            Nothing
+        Notes:
+            Quick way to update all lines in the section
+        """
+        line_num = 1
+        while line_num <= self.num_of_lines:
+            self.update_line(line_num)
+            line_num += 1
+
+
+
+
+    # def header(self):
+    #     FRAME_COLOR = tft.BLUE
+    #     FILL_COLOR = tft.BLUE
+    #     TEXT_COLOR = 0xffffff
+    #     HEIGHT = 40
+    #     LINE1_Y = 0
+    #     LINE2_Y = 20
+    #
+    #     tft.rect(0, 0, 320, HEIGHT, FRAME_COLOR, FILL_COLOR)
+    #     tft.textClear(tft.CENTER,LINE1_Y, self.h1_text)
+    #     tft.text(tft.CENTER,LINE1_Y, self.h1_text, TEXT_COLOR, transparent=True)
+    #     tft.textClear(tft.CENTER,LINE2_Y, self.h2_text)
+    #     tft.text(tft.CENTER,LINE2_Y, self.h2_text, TEXT_COLOR, transparent=True)
+    #
+    # def test_param(self):
+    #     FRAME_COLOR = tft.BLUE
+    #     FILL_COLOR = tft.BLUE
+    #     TEXT_COLOR = 0xffffff
+    #     HEIGHT = 60
+    #     text_line_1 = ''
+    #     text_line_2 = ''
+    #
+    #     tft.rect(0, 0, 320, 20, tft.RED, tft.RED)
+    #     #printLCD(TEST_NAME_1, Y=LCDTitle1, Background=BLACK)
+    #     #printLCD(TEST_NAME_2, Y=LCDTitle2, Background=BLACK)
+    #
+    # def test_status(self):
+    #     FRAME_COLOR = tft.BLUE
+    #     FILL_COLOR = tft.BLUE
+    #     TEXT_COLOR = 0xffffff
+    #     HEIGHT = 60
+    #     #text_line_1 = ''
+    #     #text_line_2 = ''
+    #
+    #     tft.rect(0, 0, 320, 20, tft.RED, tft.RED)
+    #     printLCD(TEST_NAME_1, Y=LCDTitle1, Background=BLUE)
+    #     printLCD(TEST_NAME_2, Y=LCDTitle2, Background=BLUE)
+
+
 
     def printLCD(text, X=0, Y=0, bg_color=0x000000, text_color=0xffffff, transparent=True):
-        text = str(f'{text}\r')
+        text = str(text)
         tft.textClear(X, Y, text)
         tft.text(X, Y, text, text_color, transparent=True)
 
 
 
-class Test:
-    """
-    Args:
-
-    Note:
-        Defines the parameters of the test
-    """
-    def __init__(self, on_time_ms: int, off_time_ms: int, relay: Relay, button: machine.Signal, display ):
-        pass
-
-    def read_current(seconds: int, relay: Relay) -> None:
-        printLCD("Enabling DC power", Y=LCDStatusLine1)
-        relay.on()
-        printLCD("Dwell for " + str(seconds) + " seconds", Y=LCDStatusLine2)
-        utime.sleep_ms(seconds * 1000)  # allow time for the readings to stabilize
-        printLCD("Take measurement now", Y=LCDStatusLine1, Background=0xaaaa)
-        printLCD("Press Button", Y=LCDStatusLine2, Background=0x0)
-        printLCD("", Y=LCDStatusLine3, Background=0x0)
-        while button.value() == 1:
-            utime.sleep_ms(50)
-        printLCD("", Y=LCDStatusLine1)
-        printLCD("", Y=LCDStatusLine2)
-        printLCD("", Y=LCDStatusLine3)
-        return
-
-    def kill_power():
-        disable()
-        printLCD("Power is off", Y=LCDStatusLine1)
-        printLCD("load/unload PCBA", Y=LCDStatusLine2)
-        printLCD("Press button", Y=LCDStatusLine3)
-        while button.value() == 1:
-            utime.sleep_ms(50)
-        printLCD("", Y=LCDStatusLine1)
-        printLCD("", Y=LCDStatusLine2)
-        printLCD("", Y=LCDStatusLine3)
-        return
-
-    def keep_power_on():
-        disable()
-        printLCD("Press button to", Y=LCDStatusLine2)
-        printLCD("turn power off", Y=LCDStatusLine3)
-        while button.value() == 1:
-            utime.sleep_ms(50)
-        printLCD("", Y=LCDStatusLine1)
-        printLCD("", Y=LCDStatusLine2)
-        printLCD("", Y=LCDStatusLine3)
-        return
-
-    def perform_test():
-        updatesDisabled = False
-
-        def updateDisplay(count):
-            if updatesDisabled == True:
-                return
-            printLCD(str(count) + " of " + str(NUMBER_OF_CYCLES), Y=LCDStatusLine2)
-            rt = ((ON_TIME_ms + OFF_TIME_ms) * (NUMBER_OF_CYCLES - count))  # rt stands for Remaining Time
-            rt = prettyTime(rt, verbose=False)
-            printLCD("Left:" + str(rt), Y=LCDStatusLine3)
-
-        printLCD("Test in progress", Y=LCDStatusLine1)
-        if ON_TIME_ms < DISPLAY_UPDATE_INTERVAL and OFF_TIME_ms < DISPLAY_UPDATE_INTERVAL:
-            printLCD("Updates Disabled", Y=LCDStatusLine2)
-            printLCD("Cycles= " + str(NUMBER_OF_CYCLES), Y=LCDStatusLine3)
-            updatesDisabled = True
-        else:
-            updateDisplay(NUMBER_OF_CYCLES)
-
-        displayUpdateDue = utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
-        displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
-
-        for count in range(NUMBER_OF_CYCLES):
-            count += 1
-            waiting = True
-            deadline = utime.ticks_add(utime.ticks_ms(), +ON_TIME_ms)
-
-            enable()
-            while waiting == True:
-                msRemaining = utime.ticks_diff(utime.ticks_ms(), deadline)
-                if msRemaining <= -1:  # the -1 is to allow for calculation time
-                    displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
-                    if displayUpdateRemaining >= 0 and msRemaining < -55:  # defer the update if there is not enough time before the next toggle state change
-                        updateDisplay(count)
-                        displayUpdateDue = utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
-                else:
-                    waiting = False
-
-            disable()
-            waiting = True
-            deadline = utime.ticks_add(utime.ticks_ms(), +OFF_TIME_ms)
-            while waiting == True:
-                msRemaining = utime.ticks_diff(utime.ticks_ms(), deadline)
-                if msRemaining <= -1:  # the -1 is to allow for calculation time
-                    displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
-                    if displayUpdateRemaining >= 0 and msRemaining < -55:  # defer the update if there is not enough time before the next toggle state change
-                        updateDisplay(count)
-                        displayUpdateDue = utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
-                else:
-                    waiting = False
-
-        updateDisplay(count)
+# class Test:
+#     """
+#     Args:
+#
+#     Note:
+#         Defines the parameters of the test
+#     """
+#     def __init__(self, on_time_ms: int, off_time_ms: int, relay: Relay, button: machine.Signal, display ):
+#         pass
+#
+#     def read_current(seconds: int, relay: Relay) -> None:
+#         printLCD("Enabling DC power", Y=LCDStatusLine1)
+#         relay.on()
+#         printLCD("Dwell for " + str(seconds) + " seconds", Y=LCDStatusLine2)
+#         utime.sleep_ms(seconds * 1000)  # allow time for the readings to stabilize
+#         printLCD("Take measurement now", Y=LCDStatusLine1, Background=0xaaaa)
+#         printLCD("Press Button", Y=LCDStatusLine2, Background=0x0)
+#         printLCD("", Y=LCDStatusLine3, Background=0x0)
+#         while button.value() == 1:
+#             utime.sleep_ms(50)
+#         printLCD("", Y=LCDStatusLine1)
+#         printLCD("", Y=LCDStatusLine2)
+#         printLCD("", Y=LCDStatusLine3)
+#         return
+#
+#     def kill_power():
+#         disable()
+#         printLCD("Power is off", Y=LCDStatusLine1)
+#         printLCD("load/unload PCBA", Y=LCDStatusLine2)
+#         printLCD("Press button", Y=LCDStatusLine3)
+#         while button.value() == 1:
+#             utime.sleep_ms(50)
+#         printLCD("", Y=LCDStatusLine1)
+#         printLCD("", Y=LCDStatusLine2)
+#         printLCD("", Y=LCDStatusLine3)
+#         return
+#
+#     def keep_power_on():
+#         disable()
+#         printLCD("Press button to", Y=LCDStatusLine2)
+#         printLCD("turn power off", Y=LCDStatusLine3)
+#         while button.value() == 1:
+#             utime.sleep_ms(50)
+#         printLCD("", Y=LCDStatusLine1)
+#         printLCD("", Y=LCDStatusLine2)
+#         printLCD("", Y=LCDStatusLine3)
+#         return
+#
+#     def perform_test():
+#         updatesDisabled = False
+#
+#         def updateDisplay(count):
+#             if updatesDisabled == True:
+#                 return
+#             printLCD(str(count) + " of " + str(NUMBER_OF_CYCLES), Y=LCDStatusLine2)
+#             rt = ((ON_TIME_ms + OFF_TIME_ms) * (NUMBER_OF_CYCLES - count))  # rt stands for Remaining Time
+#             rt = prettyTime(rt, verbose=False)
+#             printLCD("Left:" + str(rt), Y=LCDStatusLine3)
+#
+#         printLCD("Test in progress", Y=LCDStatusLine1)
+#         if ON_TIME_ms < DISPLAY_UPDATE_INTERVAL and OFF_TIME_ms < DISPLAY_UPDATE_INTERVAL:
+#             printLCD("Updates Disabled", Y=LCDStatusLine2)
+#             printLCD("Cycles= " + str(NUMBER_OF_CYCLES), Y=LCDStatusLine3)
+#             updatesDisabled = True
+#         else:
+#             updateDisplay(NUMBER_OF_CYCLES)
+#
+#         displayUpdateDue = utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
+#         displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
+#
+#         for count in range(NUMBER_OF_CYCLES):
+#             count += 1
+#             waiting = True
+#             deadline = utime.ticks_add(utime.ticks_ms(), +ON_TIME_ms)
+#
+#             enable()
+#             while waiting == True:
+#                 msRemaining = utime.ticks_diff(utime.ticks_ms(), deadline)
+#                 if msRemaining <= -1:  # the -1 is to allow for calculation time
+#                     displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
+#                     if displayUpdateRemaining >= 0 and msRemaining < -55:  # defer the update if there is not enough time before the next toggle state change
+#                         updateDisplay(count)
+#                         displayUpdateDue = utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
+#                 else:
+#                     waiting = False
+#
+#             disable()
+#             waiting = True
+#             deadline = utime.ticks_add(utime.ticks_ms(), +OFF_TIME_ms)
+#             while waiting == True:
+#                 msRemaining = utime.ticks_diff(utime.ticks_ms(), deadline)
+#                 if msRemaining <= -1:  # the -1 is to allow for calculation time
+#                     displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
+#                     if displayUpdateRemaining >= 0 and msRemaining < -55:  # defer the update if there is not enough time before the next toggle state change
+#                         updateDisplay(count)
+#                         displayUpdateDue = utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
+#                 else:
+#                     waiting = False
+#
+#         updateDisplay(count)
 
 class Relay(machine.Signal):
     """
@@ -245,16 +378,9 @@ class Button:
     pass
 
 class Encoder:
-    pass
+    def __init__(self):
+        pass
 
-class GUI2LCD:
-    """
-    Args:
-
-    Note:
-        Used to convert generic display changes to LCD Driver commands.
-        This should make it easier to adapt to various displays.
-    """
 
 def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> str:
     """
@@ -275,8 +401,7 @@ def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> st
     weeks, days = divmod(days, 7)
     years, weeks = divmod(weeks, 52)
 
-    #time:=str("%1dy %1dw %1dd" % (years, weeks, days))
-    time:=str(f'{years} {weeks} {days}')
+    time = str("%1dy %1dw %1dd" % (years, weeks, days))
     if verbose == False:
         if years == 0:
             time=str("%1dw %1dd %1dh" % (weeks, days, hours))
@@ -291,7 +416,7 @@ def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> st
                             if seconds == 0:
                                 time=str("%1dms" % (truncate(milliseconds, precision=msPrecision)))
     else:
-        time=str("%1dy %1dw %1dd %1dh %02dm %02ds.%3ds" % (years, weeks, days, hours, minutes, seconds, milliseconds))
+        time=str("%1dy %1dw %1dd %1dh %02dm %02d.%3ds" % (years, weeks, days, hours, minutes, seconds, milliseconds))
     return time
 
 def truncate(original_number: float, precision: int=1) -> str:
@@ -327,120 +452,119 @@ def cycle(on_time_ms: int, off_time_ms: int, relay: Relay) -> None:
     utime.sleep_ms(on_time_ms)
     relay.off()
     utime.sleep_ms(off_time_ms)
-    gc.collect()
 
-
-# --------------- in work ----------
-def format(pulse_width_ms: int=1000, duty_cycle:  int=50,
-           on_time_ms:     int=250,  off_time_ms: int=100) -> tuple(int, int):
-    """
-    Args:
-        pulse_width_ms: The pulse width in milliseconds.
-                        Default = 1000 (1 second)
-        duty_cycle: The duty cycle in percent
-                    Default = 50%
-
-        on_time_ms: The on time in milliseconds.
-                    Default = 250 milliseconds.
-        off_time_ms: The off time in milliseconds.
-                     Default = 100 milliseconds.
-
-    Returns: The on and off time in milliseconds, computed from the values given.
-    Notes:  pulse_width and duty_cycle take priority over any values given for the on_time_ms and off_time_ms.
-    """
-    if pulse_width_ms != 0:
-        on_time_ms = int(pulse_width_ms * (duty_cycle / 100))
-        off_time_ms = int(pulse_width_ms - on_time_ms)
-    else:
-        on_time_ms = int(on_time_ms)
-        off_time_ms = int(off_time_ms)
-        pulse_width_ms = int(on_time_ms + off_time_ms)
-        duty_cycle = trunc(((on_time_ms / pulse_width_ms) * 100), 2)
-
-    time=((on_time_ms + off_time_ms) * NUMBER_OF_CYCLES)  ### <-- should not be here, but not sure where is right...
-
-    printLCD("PW  = " + prettyTime(pulse_width_ms), Y=LCDParamLine1)
-    printLCD("DS  = " + str(duty_cycle) + "%", Y=LCDParamLine2)
-    printLCD("ON  = " + prettyTime(on_time_ms, 3), Y=LCDParamLine3)
-    printLCD("OFF = " + prettyTime(off_time_ms, 3), Y=LCDParamLine4)
-    printLCD("Time= "+prettyTime(time, 3), Y=LCDParamLine5 )
-
-    gc.collect()
-    return (on_time_ms, off_time_ms)
-
-def load_test_settings(TestConfigFile):
-    global  TEST_NAME_1, TEST_NAME_2,\
-            NUMBER_OF_CYCLES,\
-            PULSE_WIDTH_ms, DUTY_CYCLE,\
-            ON_TIME_ms, OFF_TIME_ms,\
-            INVERTED
-
-    TestConfig = __import__(TestConfigFile)
-
-    TEST_NAME_1 = TestConfig.TEST_NAME_1
-    TEST_NAME_2 = TestConfig.TEST_NAME_2
-    NUMBER_OF_CYCLES = TestConfig.NUMBER_OF_CYCLES
-    PULSE_WIDTH_ms = TestConfig.PULSE_WIDTH_ms
-    DUTY_CYCLE = TestConfig.DUTY_CYCLE
-    ON_TIME_ms  = TestConfig.ON_TIME_ms
-    OFF_TIME_ms = TestConfig.OFF_TIME_ms
-    INVERTED = TestConfig.INVERTED
-
-def m5():
-    a = m5stack.ButtonA(callback=button_hander_a)
-    b = m5stack.ButtonB(callback=button_hander_b)
-    c = m5stack.ButtonC(callback=button_hander_c)
-
-
-if __name__ == __main__:
-    gc.enable()
-    gc.collect()
-
-    print("configuring hardware")
-
-    DISPLAY_UPDATE_INTERVAL = const(56)  # Do not set below 56 or the display will not update
-    TOGGLE_PIN_1 = const(4)
-    # TOGGLE_PIN_2 = const(11)
-
-    buttonPin = const(0)
-    ENCODER_PIN_1 = const(9)
-    ENCODER_PIN_2 = const(10)
-
-    RED = rgb.color565(255, 0, 0)
-    BLUE = rgb.color565(0, 255, 0)
-    GREEN = rgb.color565(0, 0, 255)
-    BLACK = rgb.color565(0, 0, 0)
-
-    LCDTitle1 = const(0)
-    LCDTitle2 = const(10)
-
-    LCDParamLine1 = const(25)
-    LCDParamLine2 = const(35)
-    LCDParamLine3 = const(45)
-    LCDParamLine4 = const(55)
-    LCDParamLine5 = const(65)
-
-    LCDStatusLine1 = const(80)
-    LCDStatusLine2 = const(90)
-    LCDStatusLine3 = const(100)
-
-    TestConfigFile = 'PCBA-32109Rev6'
-    # TestConfigFile = 'PCBA-31334'
-    # TestConfigFile = 'fastTest'
-    # TestConfigFile = 'superFastTest'
-    loadTestSettings(TestConfigFile)
-
-    lcd_title_area()
-
-    ON_TIME_ms, OFF_TIME_ms = format(PULSE_WIDTH_ms, DUTY_CYCLE, ON_TIME_ms, OFF_TIME_ms)
-
-    killPower()  # remove power to make it safe to unload the pcbas
-    # readI(5) #current measurement step
-
-    # print (micropython.mem_info())
-    performTest()
-
-    keepPowerOn()
-    # readI(5) #read current and leave power on
-    killPower()  # remove power to make it safe to unload the pcbas
-    machine.reset()
+#
+# # --------------- in work ----------
+# def format(pulse_width_ms: int=1000, duty_cycle:  int=50,
+#            on_time_ms:     int=250,  off_time_ms: int=100) -> tuple(int, int):
+#     """
+#     Args:
+#         pulse_width_ms: The pulse width in milliseconds.
+#                         Default = 1000 (1 second)
+#         duty_cycle: The duty cycle in percent
+#                     Default = 50%
+#
+#         on_time_ms: The on time in milliseconds.
+#                     Default = 250 milliseconds.
+#         off_time_ms: The off time in milliseconds.
+#                      Default = 100 milliseconds.
+#
+#     Returns: The on and off time in milliseconds, computed from the values given.
+#     Notes:  pulse_width and duty_cycle take priority over any values given for the on_time_ms and off_time_ms.
+#     """
+#     if pulse_width_ms != 0:
+#         on_time_ms = int(pulse_width_ms * (duty_cycle / 100))
+#         off_time_ms = int(pulse_width_ms - on_time_ms)
+#     else:
+#         on_time_ms = int(on_time_ms)
+#         off_time_ms = int(off_time_ms)
+#         pulse_width_ms = int(on_time_ms + off_time_ms)
+#         duty_cycle = trunc(((on_time_ms / pulse_width_ms) * 100), 2)
+#
+#     time=((on_time_ms + off_time_ms) * NUMBER_OF_CYCLES)  ### <-- should not be here, but not sure where is right...
+#
+#     printLCD("PW  = " + prettyTime(pulse_width_ms), Y=LCDParamLine1)
+#     printLCD("DS  = " + str(duty_cycle) + "%", Y=LCDParamLine2)
+#     printLCD("ON  = " + prettyTime(on_time_ms, 3), Y=LCDParamLine3)
+#     printLCD("OFF = " + prettyTime(off_time_ms, 3), Y=LCDParamLine4)
+#     printLCD("Time= "+prettyTime(time, 3), Y=LCDParamLine5 )
+#
+#     gc.collect()
+#     return (on_time_ms, off_time_ms)
+#
+# def load_test_settings(TestConfigFile):
+#     global  TEST_NAME_1, TEST_NAME_2,\
+#             NUMBER_OF_CYCLES,\
+#             PULSE_WIDTH_ms, DUTY_CYCLE,\
+#             ON_TIME_ms, OFF_TIME_ms,\
+#             INVERTED
+#
+#     TestConfig = __import__(TestConfigFile)
+#
+#     TEST_NAME_1 = TestConfig.TEST_NAME_1
+#     TEST_NAME_2 = TestConfig.TEST_NAME_2
+#     NUMBER_OF_CYCLES = TestConfig.NUMBER_OF_CYCLES
+#     PULSE_WIDTH_ms = TestConfig.PULSE_WIDTH_ms
+#     DUTY_CYCLE = TestConfig.DUTY_CYCLE
+#     ON_TIME_ms  = TestConfig.ON_TIME_ms
+#     OFF_TIME_ms = TestConfig.OFF_TIME_ms
+#     INVERTED = TestConfig.INVERTED
+#
+# def m5():
+#     a = m5stack.ButtonA(callback=button_hander_a)
+#     b = m5stack.ButtonB(callback=button_hander_b)
+#     c = m5stack.ButtonC(callback=button_hander_c)
+#
+#
+# if __name__ == __main__:
+#     gc.enable()
+#     gc.collect()
+#
+#     print("configuring hardware")
+#
+#     DISPLAY_UPDATE_INTERVAL = const(56)  # Do not set below 56 or the display will not update
+#     TOGGLE_PIN_1 = const(4)
+#     # TOGGLE_PIN_2 = const(11)
+#
+#     buttonPin = const(0)
+#     ENCODER_PIN_1 = const(9)
+#     ENCODER_PIN_2 = const(10)
+#
+#     RED = rgb.color565(255, 0, 0)
+#     BLUE = rgb.color565(0, 255, 0)
+#     GREEN = rgb.color565(0, 0, 255)
+#     BLACK = rgb.color565(0, 0, 0)
+#
+#     LCDTitle1 = const(0)
+#     LCDTitle2 = const(10)
+#
+#     LCDParamLine1 = const(25)
+#     LCDParamLine2 = const(35)
+#     LCDParamLine3 = const(45)
+#     LCDParamLine4 = const(55)
+#     LCDParamLine5 = const(65)
+#
+#     LCDStatusLine1 = const(80)
+#     LCDStatusLine2 = const(90)
+#     LCDStatusLine3 = const(100)
+#
+#     TestConfigFile = 'PCBA-32109Rev6'
+#     # TestConfigFile = 'PCBA-31334'
+#     # TestConfigFile = 'fastTest'
+#     # TestConfigFile = 'superFastTest'
+#     loadTestSettings(TestConfigFile)
+#
+#     lcd_title_area()
+#
+#     ON_TIME_ms, OFF_TIME_ms = format(PULSE_WIDTH_ms, DUTY_CYCLE, ON_TIME_ms, OFF_TIME_ms)
+#
+#     killPower()  # remove power to make it safe to unload the pcbas
+#     # readI(5) #current measurement step
+#
+#     # print (micropython.mem_info())
+#     performTest()
+#
+#     keepPowerOn()
+#     # readI(5) #read current and leave power on
+#     killPower()  # remove power to make it safe to unload the pcbas
+#     machine.reset()
