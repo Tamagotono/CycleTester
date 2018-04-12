@@ -19,7 +19,7 @@ TODO:
     * Make the test configuration setup a separate file
     * Make the hardware setup a separate file
     * Make a menu to select the test configuration file (in progress)
-    * Make a separate function to update the different sections of the display
+DONE: Make a separate class to update the different sections of the display
     * Allow live adjustment of the settings
     * Allow saving of new profiles
     * Add an encoder for navigating the menus. (Soldered to pins 9 and 10)
@@ -27,7 +27,7 @@ TODO:
     * Switch to the importlib method of loading variable modules, when this feature is added to uPy. (Not available)
 
 NOTE:
-    * Using IO pin 2 for the toggle pin is a bad idea. It cycles multiple times during boot
+    * For ESP8266, Using IO pin 2 for the toggle pin is a bad idea. It cycles multiple times during boot
     * Pin 4 seems to be tied to communications... Need to research for better choice of pins
 
 
@@ -53,24 +53,20 @@ class UI:
     """
     Args:
         title_size (int): The number of lines for the Title section. Default = 1
-
         nav_size (int): The number of lines for the Navigation section. Set to 0 for test UIs. Default = 0
-
         parameter_size (int): The number of lines for the Parameter section. Set to 0 for menu UIs. Default = 4
-
         status_size (int): The number of lines for the Status section. Set to 0 for menu UIs. Default = 3
-
         notification_size (int): The number of lines for the Notification section. Default = 1
-
     Note:
         This is the display for a specific test / menu. All calls to change the
-        information on the screen need to go through the GUI2LCD instance.
     """
     global tft
 
     def __init__(self):
         tft.clear()
+
         self.screenwidth, self.screenheight = tft.screensize()
+
         self.header =     DisplaySection(0,0,40, self.screenwidth,
                                          text_color=tft.BLACK,
                                          font=tft.FONT_DejaVu18,
@@ -82,25 +78,27 @@ class UI:
                                          fill_color=tft.BLACK,
                                          frame_color=tft.BLACK)
 
-        self.status =     DisplaySection(0,161,60, self.screenwidth,
+        self.status =     DisplaySection(0,162,58, self.screenwidth,
                                          text_color=tft.YELLOW,
-                                         fill_color=tft.GREY,
-                                         frame_color=tft.GREY)
+                                         fill_color=tft.DARKGREY,
+                                         frame_color=tft.DARKGREY)
 
-        self.popup =      DisplaySection(-1, -1, -1, -1,
-                                         popup_width = -1,
+        self.popup =      DisplaySection(30, 20, 300, 200,
                                          frame_color = tft.WHITE,
                                          fill_color = tft.BLUE,
                                          text_color = tft.WHITE,
                                          font = tft.FONT_DejaVu24,
                                          is_popup=True,
-                                         corner_radius=20
+                                         corner_radius=20,
+                                         func = self.refresh_all
                                          )
 
+        self.panes = [self.header, self.parameters, self.status, self.popup]
 
         self.footer()
 
         self.__displaytest()
+        #self.popup.pop_up()
 
     def __displaytest(self):
         """
@@ -128,6 +126,12 @@ class UI:
 
 
     def footer(self):
+        """
+        Returns:
+            Nothing
+        Notes:
+            Draws the button labels at the bottom of the display, then sets the window to not include the footer area.
+        """
         tft.rect( 25, 220, 80, 30, tft.BLUE, tft.BLUE)
         tft.text( 50, 222,   "UP", tft.WHITE, transparent=True)
 
@@ -136,8 +140,17 @@ class UI:
 
         tft.rect(215, 220, 80, 30, tft.BLUE, tft.BLUE)
         tft.text(230, 222,  "SEL", tft.WHITE, transparent=True)
+        tft.setwin(0,0,0,219)
 
-
+    def refresh_all(self):
+        """
+        Returns:
+            Nothing
+        Notes:
+            Gets passed as a callback, to allow all panes to be redrawn, but called from the popup pane.
+        """
+        for pane in self.panes:
+            pane.update_all_lines()
 
 
 
@@ -152,7 +165,8 @@ class DisplaySection:
                  text_color:int = tft.WHITE,
                  font = tft.FONT_DejaVu18,
                  is_popup = False,
-                 corner_radius = 0
+                 corner_radius = 0,
+                 func = None
                  ):
 
         self.x = x
@@ -166,9 +180,10 @@ class DisplaySection:
         self.popup = is_popup
         self.corner_radius = corner_radius
         tft.font(self.font)
+        self.func = func
         self.line_height, self.text_y = self.line_height_margin_calc(10)
         self.num_of_lines = int(self.frame_height / self.line_height)
-        print(str(self.font))
+        # print(str(self.font))
         # print("self.x = " + str(self.x))
         # print("self.y = " + str(self.y))
         # print("self.frameheight = " + str(self.frame_height))
@@ -190,7 +205,7 @@ class DisplaySection:
         self.__create_lines(self.num_of_lines)
         self.update_all_lines()
 
-    def line_height_margin_calc(self, margin:int = 10) -> int:
+    def line_height_margin_calc(self, margin:int = 10) -> Tuple(int, int):
         """
         Args:
             margin_pct (int): the percentage of font size for vertical margins
@@ -252,35 +267,42 @@ class DisplaySection:
             self.update_line(line_num)
             line_num += 1
 
-    def popup(self, text: str):
-        global popupActive = True
+    def pop_up(self, text: str="Default Popup Text"):
+        global popupActive
+        popupActive = True
+
         x, y = tft.screensize()
-        font_height = tft.fontSize()[1] * 1.2
-        text_width = tft.textWidth(text) + 10
+        font_height = int(tft.fontSize()[1] * 1.2)
+        text_width = int(tft.textWidth(text) + 10)
 
-        if popup_height == -1:
-            popup_height = int(x / 1.3)
-            # if popup_height < font_height:
-            #     popup_height = font_height
-        if popup_width == -1:
-            popup_width = int(y / 1.3)
-            # if popup_width < text_width:
-            #     popup_width = text_width
+        if self.frame_height == -1:
+            self.frame_height = int(x / 1.3)
+            if self.frame_height < font_height:
+                self.frame_height = int(font_height)
 
-        x_offset = (x - popup_width) / 2
-        y_offset = (y - popup_height) / 2
+        if self.frame_width == -1:
+            new_width = int(y/1.3)
+            if new_width < text_width:
+                self.frame_width = int(text_width)
+            else:
+                self.frame_width = int(new_width)
+
+        x_offset = int((x - self.frame_width) / 2)
+        y_offset = int((y - self.frame_height) / 2)
 
         self.x = x_offset
         self.y = y_offset
-        self.frame_width = popup_width
-        self.frame_height = popup_height
+        # self.frame_width = frame_width
+        # self.frame_height = frame_height
 
         self.__initialize_section()
 
 
-    def popdown(self):
-        global popupActive = False
-        pass
+    def pop_down(self):
+        global popupActive
+        popupActive = False
+        tft.clearWin()
+        self.func()  # callback function to redraw all panes
 
     # def printLCD(text, X=0, Y=0, bg_color=0x000000, text_color=0xffffff, transparent=True):
     #     text = str(text)
@@ -288,107 +310,107 @@ class DisplaySection:
     #     tft.text(X, Y, text, text_color, transparent=True)
     #
 
-
-class Test:
-    """
-    Args:
-
-    Note:
-        Defines the parameters of the test
-    """
-    def __init__(self, on_time_ms: int, off_time_ms: int, relay: Relay, button: machine.Signal, display ):
-        pass
-
-    def read_current(seconds: int, relay: Relay) -> None:
-        printLCD("Enabling DC power", Y=LCDStatusLine1)
-        relay.on()
-        printLCD("Dwell for " + str(seconds) + " seconds", Y=LCDStatusLine2)
-        utime.sleep_ms(seconds * 1000)  # allow time for the readings to stabilize
-        printLCD("Take measurement now", Y=LCDStatusLine1, Background=0xaaaa)
-        printLCD("Press Button", Y=LCDStatusLine2, Background=0x0)
-        printLCD("", Y=LCDStatusLine3, Background=0x0)
-        while button.value() == 1:
-            utime.sleep_ms(50)
-        printLCD("", Y=LCDStatusLine1)
-        printLCD("", Y=LCDStatusLine2)
-        printLCD("", Y=LCDStatusLine3)
-        return
-
-    def kill_power():
-        disable()
-        printLCD("Power is off", Y=LCDStatusLine1)
-        printLCD("load/unload PCBA", Y=LCDStatusLine2)
-        printLCD("Press button", Y=LCDStatusLine3)
-        while button.value() == 1:
-            utime.sleep_ms(50)
-        printLCD("", Y=LCDStatusLine1)
-        printLCD("", Y=LCDStatusLine2)
-        printLCD("", Y=LCDStatusLine3)
-        return
-
-    def keep_power_on():
-        disable()
-        printLCD("Press button to", Y=LCDStatusLine2)
-        printLCD("turn power off", Y=LCDStatusLine3)
-        while button.value() == 1:
-            utime.sleep_ms(50)
-        printLCD("", Y=LCDStatusLine1)
-        printLCD("", Y=LCDStatusLine2)
-        printLCD("", Y=LCDStatusLine3)
-        return
-
-    def perform_test():
-        updatesDisabled = False
-
-        def updateDisplay(count):
-            if updatesDisabled == True:
-                return
-            printLCD(str(count) + " of " + str(NUMBER_OF_CYCLES), Y=LCDStatusLine2)
-            rt = ((ON_TIME_ms + OFF_TIME_ms) * (NUMBER_OF_CYCLES - count))  # rt stands for Remaining Time
-            rt = prettyTime(rt, verbose=False)
-            printLCD("Left:" + str(rt), Y=LCDStatusLine3)
-
-        printLCD("Test in progress", Y=LCDStatusLine1)
-        if ON_TIME_ms < DISPLAY_UPDATE_INTERVAL and OFF_TIME_ms < DISPLAY_UPDATE_INTERVAL:
-            printLCD("Updates Disabled", Y=LCDStatusLine2)
-            printLCD("Cycles= " + str(NUMBER_OF_CYCLES), Y=LCDStatusLine3)
-            updatesDisabled = True
-        else:
-            updateDisplay(NUMBER_OF_CYCLES)
-
-        displayUpdateDue = utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
-        displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
-
-        for count in range(NUMBER_OF_CYCLES):
-            count += 1
-            waiting = True
-            deadline = utime.ticks_add(utime.ticks_ms(), +ON_TIME_ms)
-
-            enable()
-            while waiting == True:
-                msRemaining = utime.ticks_diff(utime.ticks_ms(), deadline)
-                if msRemaining <= -1:  # the -1 is to allow for calculation time
-                    displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
-                    if displayUpdateRemaining >= 0 and msRemaining < -55:  # defer the update if there is not enough time before the next toggle state change
-                        updateDisplay(count)
-                        displayUpdateDue = utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
-                else:
-                    waiting = False
-
-            disable()
-            waiting = True
-            deadline = utime.ticks_add(utime.ticks_ms(), +OFF_TIME_ms)
-            while waiting == True:
-                msRemaining = utime.ticks_diff(utime.ticks_ms(), deadline)
-                if msRemaining <= -1:  # the -1 is to allow for calculation time
-                    displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
-                    if displayUpdateRemaining >= 0 and msRemaining < -55:  # defer the update if there is not enough time before the next toggle state change
-                        updateDisplay(count)
-                        displayUpdateDue = utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
-                else:
-                    waiting = False
-
-        updateDisplay(count)
+#
+# class Test:
+#     """
+#     Args:
+#
+#     Note:
+#         Defines the parameters of the test
+#     """
+#     def __init__(self, on_time_ms: int, off_time_ms: int, relay: Relay, button: machine.Signal, display ):
+#         pass
+#
+#     def read_current(seconds: int, relay: Relay) -> None:
+#         printLCD("Enabling DC power", Y=LCDStatusLine1)
+#         relay.on()
+#         printLCD("Dwell for " + str(seconds) + " seconds", Y=LCDStatusLine2)
+#         utime.sleep_ms(seconds * 1000)  # allow time for the readings to stabilize
+#         printLCD("Take measurement now", Y=LCDStatusLine1, Background=0xaaaa)
+#         printLCD("Press Button", Y=LCDStatusLine2, Background=0x0)
+#         printLCD("", Y=LCDStatusLine3, Background=0x0)
+#         while button.value() == 1:
+#             utime.sleep_ms(50)
+#         printLCD("", Y=LCDStatusLine1)
+#         printLCD("", Y=LCDStatusLine2)
+#         printLCD("", Y=LCDStatusLine3)
+#         return
+#
+#     def kill_power():
+#         disable()
+#         printLCD("Power is off", Y=LCDStatusLine1)
+#         printLCD("load/unload PCBA", Y=LCDStatusLine2)
+#         printLCD("Press button", Y=LCDStatusLine3)
+#         while button.value() == 1:
+#             utime.sleep_ms(50)
+#         printLCD("", Y=LCDStatusLine1)
+#         printLCD("", Y=LCDStatusLine2)
+#         printLCD("", Y=LCDStatusLine3)
+#         return
+#
+#     def keep_power_on():
+#         disable()
+#         printLCD("Press button to", Y=LCDStatusLine2)
+#         printLCD("turn power off", Y=LCDStatusLine3)
+#         while button.value() == 1:
+#             utime.sleep_ms(50)
+#         printLCD("", Y=LCDStatusLine1)
+#         printLCD("", Y=LCDStatusLine2)
+#         printLCD("", Y=LCDStatusLine3)
+#         return
+#
+#     def perform_test():
+#         updatesDisabled = False
+#
+#         def updateDisplay(count):
+#             if updatesDisabled == True:
+#                 return
+#             printLCD(str(count) + " of " + str(NUMBER_OF_CYCLES), Y=LCDStatusLine2)
+#             rt = ((ON_TIME_ms + OFF_TIME_ms) * (NUMBER_OF_CYCLES - count))  # rt stands for Remaining Time
+#             rt = prettyTime(rt, verbose=False)
+#             printLCD("Left:" + str(rt), Y=LCDStatusLine3)
+#
+#         printLCD("Test in progress", Y=LCDStatusLine1)
+#         if ON_TIME_ms < DISPLAY_UPDATE_INTERVAL and OFF_TIME_ms < DISPLAY_UPDATE_INTERVAL:
+#             printLCD("Updates Disabled", Y=LCDStatusLine2)
+#             printLCD("Cycles= " + str(NUMBER_OF_CYCLES), Y=LCDStatusLine3)
+#             updatesDisabled = True
+#         else:
+#             updateDisplay(NUMBER_OF_CYCLES)
+#
+#         displayUpdateDue = utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
+#         displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
+#
+#         for count in range(NUMBER_OF_CYCLES):
+#             count += 1
+#             waiting = True
+#             deadline = utime.ticks_add(utime.ticks_ms(), +ON_TIME_ms)
+#
+#             enable()
+#             while waiting == True:
+#                 msRemaining = utime.ticks_diff(utime.ticks_ms(), deadline)
+#                 if msRemaining <= -1:  # the -1 is to allow for calculation time
+#                     displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
+#                     if displayUpdateRemaining >= 0 and msRemaining < -55:  # defer the update if there is not enough time before the next toggle state change
+#                         updateDisplay(count)
+#                         displayUpdateDue = utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
+#                 else:
+#                     waiting = False
+#
+#             disable()
+#             waiting = True
+#             deadline = utime.ticks_add(utime.ticks_ms(), +OFF_TIME_ms)
+#             while waiting == True:
+#                 msRemaining = utime.ticks_diff(utime.ticks_ms(), deadline)
+#                 if msRemaining <= -1:  # the -1 is to allow for calculation time
+#                     displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
+#                     if displayUpdateRemaining >= 0 and msRemaining < -55:  # defer the update if there is not enough time before the next toggle state change
+#                         updateDisplay(count)
+#                         displayUpdateDue = utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
+#                 else:
+#                     waiting = False
+#
+#         updateDisplay(count)
 
 class Relay(machine.Signal):
     """
