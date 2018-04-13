@@ -46,6 +46,8 @@ import gc
 # ---------------------------------------------
 tft, btn_a, btn_b, btn_c = hardware_config.M5stack()
 popupActive = False
+
+NUMBER_OF_CYCLES = 50
 # ---------------------------------------------
 
 
@@ -73,32 +75,38 @@ class UI:
                                          fill_color=tft.BLUE,
                                          frame_color=tft.BLUE)
 
-        self.parameters = DisplaySection(0,41,120, self.screenwidth,
+        self.parameters = DisplaySection(0,40,120, self.screenwidth,
                                          text_color=tft.YELLOW,
                                          fill_color=tft.BLACK,
-                                         frame_color=tft.BLACK)
+                                         frame_color=tft.BLACK,
+                                         font=tft.FONT_Default)
 
-        self.status =     DisplaySection(0,162,58, self.screenwidth,
+        self.status =     DisplaySection(0,160,58, self.screenwidth,
                                          text_color=tft.YELLOW,
                                          fill_color=tft.DARKGREY,
                                          frame_color=tft.DARKGREY)
 
-        self.popup =      DisplaySection(30, 20, 300, 200,
+        self.popup =      DisplaySection(30, 20, 203, 300,
                                          frame_color = tft.WHITE,
                                          fill_color = tft.BLUE,
                                          text_color = tft.WHITE,
                                          font = tft.FONT_DejaVu24,
                                          is_popup=True,
-                                         corner_radius=20,
+                                         corner_radius=0,
                                          func = self.refresh_all
                                          )
 
-        self.panes = [self.header, self.parameters, self.status, self.popup]
+        self.panes = [self.header, self.parameters, self.status]
 
         self.footer()
 
-        self.__displaytest()
-        #self.popup.pop_up()
+        # self.__displaytest()
+        # print(__name__)
+        # utime.sleep(10)
+        # tft.clear()
+        # self.popup.pop_up(220, 180)
+        # utime.sleep(10)
+        self.popup.pop_down()
 
     def __displaytest(self):
         """
@@ -132,25 +140,28 @@ class UI:
         Notes:
             Draws the button labels at the bottom of the display, then sets the window to not include the footer area.
         """
+        tft.font(tft.FONT_Ubuntu)
+        tft.rect(  0, 220, self.screenwidth, 30, tft.YELLOW, tft.YELLOW)
+
         tft.rect( 25, 220, 80, 30, tft.BLUE, tft.BLUE)
         tft.text( 50, 222,   "UP", tft.WHITE, transparent=True)
 
         tft.rect(120, 220, 80, 30, tft.BLUE, tft.BLUE)
-        tft.text(120, 222, "DOWN", tft.WHITE, transparent=True)
+        tft.text(125, 222, "DOWN", tft.WHITE, transparent=True)
 
         tft.rect(215, 220, 80, 30, tft.BLUE, tft.BLUE)
         tft.text(230, 222,  "SEL", tft.WHITE, transparent=True)
-        tft.setwin(0,0,0,219)
 
     def refresh_all(self):
         """
         Returns:
             Nothing
         Notes:
-            Gets passed as a callback, to allow all panes to be redrawn, but called from the popup pane.
+            Gets passed as a callback, to allow all panes to be redrawn, but called from the is_popup pane.
         """
         for pane in self.panes:
             pane.update_all_lines()
+        self.footer()
 
 
 
@@ -177,7 +188,7 @@ class DisplaySection:
         self.fill_color = fill_color
         self.text_color = text_color
         self.font = font
-        self.popup = is_popup
+        self.is_popup = is_popup
         self.corner_radius = corner_radius
         tft.font(self.font)
         self.func = func
@@ -198,10 +209,15 @@ class DisplaySection:
         self.__initialize_section()
 
     def __initialize_section(self):
-        tft.font(self.font)
+        self.__initialize_section_frame()
+        self.__initialize_section_text()
+
+    def __initialize_section_frame(self):
         tft.roundrect(self.x, self.y, self.frame_width, self.frame_height, self.corner_radius,
                       self.frame_color, self.fill_color)
 
+    def __initialize_section_text(self):
+        tft.font(self.font)
         self.__create_lines(self.num_of_lines)
         self.update_all_lines()
 
@@ -229,7 +245,7 @@ class DisplaySection:
         """
         line_num = 1
         while line_num <= num_of_lines:
-            self.lines[line_num] = str(line_num)
+            self.lines[line_num] = str('')
             line_num += 1
 #        print(self.lines.items())
 
@@ -244,15 +260,13 @@ class DisplaySection:
         """
         global popupActive
 
-        if popupActive == True == self.popup:
+        if popupActive == True == self.is_popup:
             return
         else:
             tft.font(self.font)
             line_y = (((line_number - 1) * self.line_height) + self.y)
             text_y = line_y + self.text_y
-            tft.roundrect(self.x, line_y, self.frame_width, self.line_height, self.corner_radius,
-                          self.fill_color, self.fill_color)
-
+            #self.__initialize_section_frame()
             tft.text(self.x, text_y, self.lines.get(line_number, "ERROR"), self.text_color, transparent=True)
 
     def update_all_lines(self):
@@ -262,38 +276,30 @@ class DisplaySection:
         Notes:
             Quick way to update all lines in the section
         """
+        self.__initialize_section_frame()
         line_num = 1
         while line_num <= self.num_of_lines:
             self.update_line(line_num)
             line_num += 1
 
-    def pop_up(self, text: str="Default Popup Text"):
+    def pop_up(self, popup_width:int=260, popup_height: int=200):
         global popupActive
         popupActive = True
+        tft.clearwin(tft.YELLOW)
 
         x, y = tft.screensize()
-        font_height = int(tft.fontSize()[1] * 1.2)
-        text_width = int(tft.textWidth(text) + 10)
 
         if self.frame_height == -1:
-            self.frame_height = int(x / 1.3)
-            if self.frame_height < font_height:
-                self.frame_height = int(font_height)
+            self.frame_height = popup_height
 
         if self.frame_width == -1:
-            new_width = int(y/1.3)
-            if new_width < text_width:
-                self.frame_width = int(text_width)
-            else:
-                self.frame_width = int(new_width)
+            self.frame_width = popup_width
 
         x_offset = int((x - self.frame_width) / 2)
         y_offset = int((y - self.frame_height) / 2)
 
         self.x = x_offset
         self.y = y_offset
-        # self.frame_width = frame_width
-        # self.frame_height = frame_height
 
         self.__initialize_section()
 
@@ -301,7 +307,7 @@ class DisplaySection:
     def pop_down(self):
         global popupActive
         popupActive = False
-        tft.clearWin()
+        tft.clearwin()
         self.func()  # callback function to redraw all panes
 
     # def printLCD(text, X=0, Y=0, bg_color=0x000000, text_color=0xffffff, transparent=True):
@@ -457,7 +463,7 @@ def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> st
     time = str("%1dy %1dw %1dd" % (years, weeks, days))
     if verbose == False:
         if years == 0:
-            time=str("%1dw %1dd %1dh" % (weeks, days, hours))
+            time = str("%1dw %1dd %1dh" % (weeks, days, hours))
             if weeks == 0:
                 time=str("%1dd %1dh %02dm" % (days, hours, minutes))
                 if days == 0:
@@ -467,7 +473,7 @@ def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> st
                         if minutes == 0:
                             time=str("%04.2fs" % (seconds+(milliseconds/1000)))
                             if seconds == 0:
-                                time=str("%1dms" % (truncate(milliseconds, precision=msPrecision)))
+                                time=str("%sms" % truncate(milliseconds, precision=msPrecision))
     else:
         time=str("%1dy %1dw %1dd %1dh %02dm %02d.%3ds" % (years, weeks, days, hours, minutes, seconds, milliseconds))
     return time
@@ -507,43 +513,46 @@ def cycle(on_time_ms: int, off_time_ms: int, relay: Relay) -> None:
     utime.sleep_ms(off_time_ms)
 
 
-# # --------------- in work ----------
-# def format(pulse_width_ms: int=1000, duty_cycle:  int=50,
-#            on_time_ms:     int=250,  off_time_ms: int=100) -> tuple(int, int):
-#     """
-#     Args:
-#         pulse_width_ms: The pulse width in milliseconds.
-#                         Default = 1000 (1 second)
-#         duty_cycle: The duty cycle in percent
-#                     Default = 50%
-#
-#         on_time_ms: The on time in milliseconds.
-#                     Default = 250 milliseconds.
-#         off_time_ms: The off time in milliseconds.
-#                      Default = 100 milliseconds.
-#
-#     Returns: The on and off time in milliseconds, computed from the values given.
-#     Notes:  pulse_width and duty_cycle take priority over any values given for the on_time_ms and off_time_ms.
-#     """
-#     if pulse_width_ms != 0:
-#         on_time_ms = int(pulse_width_ms * (duty_cycle / 100))
-#         off_time_ms = int(pulse_width_ms - on_time_ms)
-#     else:
-#         on_time_ms = int(on_time_ms)
-#         off_time_ms = int(off_time_ms)
-#         pulse_width_ms = int(on_time_ms + off_time_ms)
-#         duty_cycle = trunc(((on_time_ms / pulse_width_ms) * 100), 2)
-#
-#     time=((on_time_ms + off_time_ms) * NUMBER_OF_CYCLES)  ### <-- should not be here, but not sure where is right...
-#
-#     printLCD("PW  = " + prettyTime(pulse_width_ms), Y=LCDParamLine1)
-#     printLCD("DS  = " + str(duty_cycle) + "%", Y=LCDParamLine2)
-#     printLCD("ON  = " + prettyTime(on_time_ms, 3), Y=LCDParamLine3)
-#     printLCD("OFF = " + prettyTime(off_time_ms, 3), Y=LCDParamLine4)
-#     printLCD("Time= "+prettyTime(time, 3), Y=LCDParamLine5 )
-#
-#     gc.collect()
-#     return (on_time_ms, off_time_ms)
+# --------------- in work ----------
+def format(pulse_width_ms: int=1000, duty_cycle:  int=50,
+           on_time_ms:     int=250,  off_time_ms: int=100) -> tuple(int, int):
+    """
+    Args:
+        pulse_width_ms: The pulse width in milliseconds.
+                        Default = 1000 (1 second)
+        duty_cycle: The duty cycle in percent
+                    Default = 50%
+
+        on_time_ms: The on time in milliseconds.
+                    Default = 250 milliseconds.
+        off_time_ms: The off time in milliseconds.
+                     Default = 100 milliseconds.
+
+    Returns: The on and off time in milliseconds, computed from the values given.
+    Notes:  pulse_width and duty_cycle take priority over any values given for the on_time_ms and off_time_ms.
+    """
+    if pulse_width_ms != 0:
+        on_time_ms = int(pulse_width_ms * (duty_cycle / 100))
+        off_time_ms = int(pulse_width_ms - on_time_ms)
+    else:
+        on_time_ms = int(on_time_ms)
+        off_time_ms = int(off_time_ms)
+        pulse_width_ms = int(on_time_ms + off_time_ms)
+        duty_cycle = truncate(((on_time_ms / pulse_width_ms) * 100), 2)
+
+    time = ((on_time_ms + off_time_ms) * NUMBER_OF_CYCLES)  ### <-- should not be here, but not sure where is right...
+
+    # print("on_time= %d, off_time= %d" % (on_time_ms, off_time_ms))
+    test_window.parameters.lines[1] = ("PW   = %s"   % prettyTime(pulse_width_ms))
+    test_window.parameters.lines[2] = ("DS   = %s%%" % str(duty_cycle))
+    test_window.parameters.lines[3] = ("ON   = %s"   % prettyTime(on_time_ms, 1))
+    test_window.parameters.lines[4] = ("OFF  = %s"   % prettyTime(off_time_ms, 1))
+    test_window.parameters.lines[5] = ("Time = %s"   % prettyTime(time, 1))
+
+    gc.collect()
+    return (on_time_ms, off_time_ms)
+
+
 #
 # def load_test_settings(TestConfigFile):
 #     global  TEST_NAME_1, TEST_NAME_2,\
@@ -567,57 +576,51 @@ def cycle(on_time_ms: int, off_time_ms: int, relay: Relay) -> None:
 #     a = m5stack.ButtonA(callback=button_hander_a)
 #     b = m5stack.ButtonB(callback=button_hander_b)
 #     c = m5stack.ButtonC(callback=button_hander_c)
-#
-#
-# if __name__ == __main__:
-#     gc.enable()
-#     gc.collect()
-#
-#     print("configuring hardware")
-#
-#     DISPLAY_UPDATE_INTERVAL = const(56)  # Do not set below 56 or the display will not update
-#     TOGGLE_PIN_1 = const(4)
-#     # TOGGLE_PIN_2 = const(11)
-#
-#     buttonPin = const(0)
-#     ENCODER_PIN_1 = const(9)
-#     ENCODER_PIN_2 = const(10)
-#
-#     RED = rgb.color565(255, 0, 0)
-#     BLUE = rgb.color565(0, 255, 0)
-#     GREEN = rgb.color565(0, 0, 255)
-#     BLACK = rgb.color565(0, 0, 0)
-#
-#     LCDTitle1 = const(0)
-#     LCDTitle2 = const(10)
-#
-#     LCDParamLine1 = const(25)
-#     LCDParamLine2 = const(35)
-#     LCDParamLine3 = const(45)
-#     LCDParamLine4 = const(55)
-#     LCDParamLine5 = const(65)
-#
-#     LCDStatusLine1 = const(80)
-#     LCDStatusLine2 = const(90)
-#     LCDStatusLine3 = const(100)
-#
-#     TestConfigFile = 'PCBA-32109Rev6'
-#     # TestConfigFile = 'PCBA-31334'
-#     # TestConfigFile = 'fastTest'
-#     # TestConfigFile = 'superFastTest'
-#     loadTestSettings(TestConfigFile)
-#
-#     lcd_title_area()
-#
-#     ON_TIME_ms, OFF_TIME_ms = format(PULSE_WIDTH_ms, DUTY_CYCLE, ON_TIME_ms, OFF_TIME_ms)
-#
-#     killPower()  # remove power to make it safe to unload the pcbas
-#     # readI(5) #current measurement step
-#
-#     # print (micropython.mem_info())
-#     performTest()
-#
-#     keepPowerOn()
-#     # readI(5) #read current and leave power on
-#     killPower()  # remove power to make it safe to unload the pcbas
-#     machine.reset()
+
+
+if __name__ == "LCDcycleTest":
+    gc.enable()
+    gc.collect()
+
+    print("configuring hardware")
+    test_window = UI()
+
+    format()
+    test_window.parameters.update_all_lines()
+
+    #DISPLAY_UPDATE_INTERVAL = const(56)  # Do not set below 56 or the display will not update
+    #TOGGLE_PIN_1 = const(4)
+    # TOGGLE_PIN_2 = const(11)
+    #
+    # buttonPin = const(0)
+    # ENCODER_PIN_1 = const(9)
+    # ENCODER_PIN_2 = const(10)
+
+
+    # LCDTitle1 = const(0)
+    # LCDTitle2 = const(10)
+    #
+    # LCDStatusLine1 = const(80)
+    # LCDStatusLine2 = const(90)
+    # LCDStatusLine3 = const(100)
+
+    TestConfigFile = 'PCBA-32109Rev6'
+    # TestConfigFile = 'PCBA-31334'
+    # TestConfigFile = 'fastTest'
+    # TestConfigFile = 'superFastTest'
+    # loadTestSettings(TestConfigFile)
+    #
+    # lcd_title_area()
+
+    #ON_TIME_ms, OFF_TIME_ms = format(PULSE_WIDTH_ms, DUTY_CYCLE, ON_TIME_ms, OFF_TIME_ms)
+
+    # killPower()  # remove power to make it safe to unload the pcbas
+    # # readI(5) #current measurement step
+    #
+    # # print (micropython.mem_info())
+    # performTest()
+    #
+    # keepPowerOn()
+    # # readI(5) #read current and leave power on
+    # killPower()  # remove power to make it safe to unload the pcbas
+    # machine.reset()
