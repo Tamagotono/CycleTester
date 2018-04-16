@@ -19,7 +19,7 @@ TODO:
     * Make the test configuration setup a separate file
     * Make the hardware setup a separate file
     * Make a menu to select the test configuration file (in progress)
-DONE: Make a separate class to update the different sections of the display
+DONE: Make a separate class to update the different panes of the display
     * Allow live adjustment of the settings
     * Allow saving of new profiles
     * Add an encoder for navigating the menus. (Soldered to pins 9 and 10)
@@ -54,11 +54,11 @@ NUMBER_OF_CYCLES = 50
 class UI:
     """
     Args:
-        title_size (int): The number of lines for the Title section. Default = 1
-        nav_size (int): The number of lines for the Navigation section. Set to 0 for test UIs. Default = 0
-        parameter_size (int): The number of lines for the Parameter section. Set to 0 for menu UIs. Default = 4
-        status_size (int): The number of lines for the Status section. Set to 0 for menu UIs. Default = 3
-        notification_size (int): The number of lines for the Notification section. Default = 1
+        title_size (int): The number of lines for the Title pane. Default = 1
+        nav_size (int): The number of lines for the Navigation pane. Set to 0 for test UIs. Default = 0
+        parameter_size (int): The number of lines for the Parameter pane. Set to 0 for menu UIs. Default = 4
+        status_size (int): The number of lines for the Status pane. Set to 0 for menu UIs. Default = 3
+        notification_size (int): The number of lines for the Notification pane. Default = 1
     Note:
         This is the display for a specific test / menu. All calls to change the
     """
@@ -69,32 +69,32 @@ class UI:
 
         self.screenwidth, self.screenheight = tft.screensize()
 
-        self.header =     DisplaySection(0,0,40, self.screenwidth,
-                                         text_color=tft.BLACK,
-                                         font=tft.FONT_DejaVu18,
-                                         fill_color=tft.BLUE,
-                                         frame_color=tft.BLUE)
+        self.header =     DisplayPane(0, 0, 40, self.screenwidth,
+                                      text_color=tft.BLACK,
+                                      font=tft.FONT_DejaVu18,
+                                      fill_color=tft.BLUE,
+                                      frame_color=tft.BLUE)
 
-        self.parameters = DisplaySection(0,40,120, self.screenwidth,
-                                         text_color=tft.YELLOW,
-                                         fill_color=tft.BLACK,
-                                         frame_color=tft.BLACK,
-                                         font=tft.FONT_Default)
+        self.parameters = DisplayPane(0, 40, 120, self.screenwidth,
+                                      text_color=tft.YELLOW,
+                                      fill_color=tft.BLACK,
+                                      frame_color=tft.BLACK,
+                                      font=tft.FONT_Default)
 
-        self.status =     DisplaySection(0,160,58, self.screenwidth,
-                                         text_color=tft.YELLOW,
-                                         fill_color=tft.DARKGREY,
-                                         frame_color=tft.DARKGREY)
+        self.status =     DisplayPane(0, 160, 58, self.screenwidth,
+                                      text_color=tft.YELLOW,
+                                      fill_color=tft.DARKGREY,
+                                      frame_color=tft.DARKGREY)
 
-        self.popup =      DisplaySection(30, 20, 203, 300,
-                                         frame_color = tft.WHITE,
-                                         fill_color = tft.BLUE,
-                                         text_color = tft.WHITE,
-                                         font = tft.FONT_DejaVu24,
-                                         is_popup=True,
-                                         corner_radius=0,
-                                         func = self.refresh_all
-                                         )
+        self.popup =      DisplayPane(30, 20, 203, 300,
+                                      frame_color = tft.WHITE,
+                                      fill_color = tft.BLUE,
+                                      text_color = tft.WHITE,
+                                      font = tft.FONT_DejaVu24,
+                                      is_popup=True,
+                                      corner_radius=0,
+                                      func = self.refresh_all
+                                      )
 
         self.panes = [self.header, self.parameters, self.status]
 
@@ -165,7 +165,7 @@ class UI:
 
 
 
-class DisplaySection:
+class DisplayPane:
     def __init__(self,
                  x:int,
                  y:int,
@@ -206,17 +206,17 @@ class DisplaySection:
         tft.set_fg(self.text_color)
 
         self.__create_lines(self.num_of_lines)
-        self.__initialize_section()
+        self.__initialize_pane()
 
-    def __initialize_section(self):
-        self.__initialize_section_frame()
-        self.__initialize_section_text()
+    def __initialize_pane(self):
+        self.__initialize_pane_frame()
+        self.__initialize_pane_text()
 
-    def __initialize_section_frame(self):
+    def __initialize_pane_frame(self):
         tft.roundrect(self.x, self.y, self.frame_width, self.frame_height, self.corner_radius,
                       self.frame_color, self.fill_color)
 
-    def __initialize_section_text(self):
+    def __initialize_pane_text(self):
         tft.font(self.font)
         self.__create_lines(self.num_of_lines)
         self.update_all_lines()
@@ -266,7 +266,7 @@ class DisplaySection:
             tft.font(self.font)
             line_y = (((line_number - 1) * self.line_height) + self.y)
             text_y = line_y + self.text_y
-            #self.__initialize_section_frame()
+            #self.__initialize_pane_frame()
             tft.text(self.x, text_y, self.lines.get(line_number, "ERROR"), self.text_color, transparent=True)
 
     def update_all_lines(self):
@@ -274,9 +274,9 @@ class DisplaySection:
         Returns:
             Nothing
         Notes:
-            Quick way to update all lines in the section
+            Quick way to update all lines in the pane
         """
-        self.__initialize_section_frame()
+        self.__initialize_pane_frame()
         line_num = 1
         while line_num <= self.num_of_lines:
             self.update_line(line_num)
@@ -301,7 +301,7 @@ class DisplaySection:
         self.x = x_offset
         self.y = y_offset
 
-        self.__initialize_section()
+        self.__initialize_pane()
 
 
     def pop_down(self):
