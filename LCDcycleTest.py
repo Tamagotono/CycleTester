@@ -441,6 +441,43 @@ class Encoder:
     def __init__(self):
         pass
 
+# def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> str:
+#     """
+#     Args:
+#         milliseconds: The value in milliseconds to format
+#         msPrecision: The number of digits to show for the milliseconds portion of the output.
+#                      Default = 1
+#         verbose: If verbose is True, it will output days, hours, minutes, seconds, milliseconds.
+#                  If verbose is False, it will display only the minimum values needed.
+#                  Default = False
+#
+#     Returns: A string with the converted time in human readable format with the precision specified.
+#     """
+#     seconds, milliseconds = divmod(milliseconds, 1000)
+#     minutes, seconds = divmod(seconds, 60)
+#     hours, minutes = divmod(minutes, 60)
+#     days, hours = divmod(hours, 24)
+#     weeks, days = divmod(days, 7)
+#     years, weeks = divmod(weeks, 52)
+#
+#     time = str("%1dy %1dw %1dd" % (years, weeks, days))
+#     if verbose == False:
+#         if years == 0:
+#             time = str("%1dw %1dd %1dh" % (weeks, days, hours))
+#             if weeks == 0:
+#                 time=str("%1dd %1dh %02dm" % (days, hours, minutes))
+#                 if days == 0:
+#                     time=str("%1dh %02dm %02ds" % (hours, minutes, seconds))
+#                     if hours == 0:
+#                         time=str("%02dm %02ds" % (minutes, seconds))
+#                         if minutes == 0:
+#                             time=str("%04.2fs" % (seconds+(milliseconds/1000)))
+#                             if seconds == 0:
+#                                 time=str("%sms" % truncate(milliseconds, precision=msPrecision))
+#     else:
+#         time=str("%1dy %1dw %1dd %1dh %02dm %02d.%3ds" % (years, weeks, days, hours, minutes, seconds, milliseconds))
+#     return time
+
 def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> str:
     """
     Args:
@@ -451,32 +488,57 @@ def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> st
                  If verbose is False, it will display only the minimum values needed.
                  Default = False
 
+                 If a negative value is entered, it is set to 0
+
     Returns: A string with the converted time in human readable format with the precision specified.
     """
-    seconds, milliseconds = divmod(milliseconds, 1000)
-    minutes, seconds = divmod(seconds, 60)
-    hours, minutes = divmod(minutes, 60)
-    days, hours = divmod(hours, 24)
-    weeks, days = divmod(days, 7)
-    years, weeks = divmod(weeks, 52)
+    years = weeks = days = hours = minutes = 0
 
-    time = str("%1dy %1dw %1dd" % (years, weeks, days))
+    if milliseconds < 0:
+        milliseconds = 0  # No negatives for you ...
+
     if verbose == False:
-        if years == 0:
+
+        if milliseconds < 1000:
+            time = str("%sms" % truncate(milliseconds, precision=msPrecision))
+        elif milliseconds < 60000:  # less than 1 minute
+            time = str("%04.2fs" % (milliseconds / 1000))
+        elif milliseconds < 3600000:  # less than 1 hour
+            minutes, seconds = divmod(milliseconds, 60000)
+            seconds = int(seconds/1000)
+            time = str("%02dm %02ds" % (minutes, seconds))
+        elif milliseconds < 86400000:  # less than 24 hours
+            minutes, seconds = divmod(milliseconds, 60000)
+            seconds = int(seconds / 1000)
+            hours, minutes = divmod(minutes, 60)
+            time = str("%1dh %02dm %02ds" % (hours, minutes, seconds))
+        elif milliseconds < 604800000:  # less than 7 days
+            hours, minutes = divmod(milliseconds, 3600000)
+            minutes = int(minutes/60000)
+            days, hours = divmod(hours, 24)
+            time = str("%1dd %1dh %02dm" % (days, hours, minutes))
+        elif milliseconds < 31449600000:  # less than 1 year
+            days, hours = divmod(milliseconds, 86400000)
+            hours = int(hours/3600000)
+            weeks, days = divmod(days, 7)
             time = str("%1dw %1dd %1dh" % (weeks, days, hours))
-            if weeks == 0:
-                time=str("%1dd %1dh %02dm" % (days, hours, minutes))
-                if days == 0:
-                    time=str("%1dh %02dm %02ds" % (hours, minutes, seconds))
-                    if hours == 0:
-                        time=str("%02dm %02ds" % (minutes, seconds))
-                        if minutes == 0:
-                            time=str("%04.2fs" % (seconds+(milliseconds/1000)))
-                            if seconds == 0:
-                                time=str("%sms" % truncate(milliseconds, precision=msPrecision))
+        elif milliseconds > 31449600000:  # over 1 year
+            weeks, days = divmod(milliseconds, 604800000)
+            days = int(days/86400000)
+            years, weeks = divmod(weeks, 52)
+            time = str("%1dy %1dw %1dd" % (years, weeks, days))
+
     else:
+        seconds, milliseconds = divmod(milliseconds, 1000)
+        minutes, seconds = divmod(seconds, 60)
+        hours, minutes = divmod(minutes, 60)
+        days, hours = divmod(hours, 24)
+        weeks, days = divmod(days, 7)
+        years, weeks = divmod(weeks, 52)
+
         time=str("%1dy %1dw %1dd %1dh %02dm %02d.%3ds" % (years, weeks, days, hours, minutes, seconds, milliseconds))
     return time
+
 
 def truncate(original_number: float, precision: int=1) -> str:
     """
@@ -552,8 +614,29 @@ def format(pulse_width_ms: int=1000, duty_cycle:  int=50,
     gc.collect()
     return (on_time_ms, off_time_ms)
 
+def importlib(module_name: str, submodule_name: str=None ):
+    """
+    Args:
+        module_name (str): Name of module to import
+        submodule_name (str): Name of the submodule to import [optional]
+    Returns:
+        the (sub)module
+    Notes:
+        You can import a submodule by
+        i.e.  "getcwd = importlib('os', 'getcwd')"  is the same of "from os import getcwd"
+
+        You can also use variables...
+        i.e.  variable_module_name = 'os'
+              cwd_is = importlib(variable_module_name, getcwd)" is the same as "from os import getcwd as cwd_is"
+    """
+    if submodule_name is None:
+        return __import__(module_name)
+    else:
+        return __import__(module_name).__getattribute__(submodule_name)
+
 
 #
+
 # def load_test_settings(TestConfigFile):
 #     global  TEST_NAME_1, TEST_NAME_2,\
 #             NUMBER_OF_CYCLES,\
@@ -581,6 +664,9 @@ def format(pulse_width_ms: int=1000, duty_cycle:  int=50,
 if __name__ == "LCDcycleTest":
     gc.enable()
     gc.collect()
+
+    test_module = PCBA32109-TEST.py
+
 
     print("configuring hardware")
     test_window = UI()
