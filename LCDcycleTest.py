@@ -449,7 +449,8 @@ class Test:
                  pulse_width_ms: int=0,
                  duty_cycle: float=0,
                  cycles: int,
-                 periodic_function,
+                 periodic_function = None,
+                 func_param = None,
                  func_call_freq: int=0):
 
         self.on_time = on_time
@@ -459,7 +460,9 @@ class Test:
         self.cycles = cycles
         self.periodic_function = periodic_function
         self.func_call_freq = func_call_freq
-
+        self.func_param = func_param
+        if self.periodic_function is None:
+            periodic_function = self.pass__
 
         self.ontime, \
         self.offtime, \
@@ -471,12 +474,21 @@ class Test:
 
         cycle_num = 0
         while cycle_num < self.cycles:
-            if cycle_num % func_call_freq == 0:
-                periodic_function()
+            if self.func_call_freq > 0 and cycle_num % func_call_freq == 0:
+                periodic_function(func_param)
             LCDcycleTest.cycle(ontime, offtime)
             LCDcycleTest.status.line[1] = "Cycle number %d of %d" % (cycle_num, NUMBER_OF_CYCLES)
             LCDcycleTest.status.update_line(1)
             cycle_num += 1
+
+    def pass__():
+        """
+        Returns:
+            Nothing
+        Notes:
+            Dummy module for use with Test class, in case a func_call_freq is assigned but no function passed.
+        """
+        pass
 
 
 # def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> str:

@@ -20,15 +20,12 @@ OFF_TIME_ms = const(4) #enter number in mS
 # END_CONDIOTION = "OFF"
 
 test_window.header.lines[1] = "32109 Rev6 Test"
-test_window.header.lines[1] = "Test version 1.1b"
+test_window.header.lines[2] = "Test version 1.1b"
 test_window.header.update_all_lines()
 
-ontime, offtime = LCDcycleTest.format(pulse_width_ms = PULSE_WIDTH_ms, duty_cycle=DUTY_CYCLE, on_time_ms=ON_TIME_ms, off_time_ms=OFF_TIME_ms)
+Round1 = LCDcycleTest.Test(on_time=20, off_time=100, cycles=1000, periodic_function=dwell, func_param=300, 100)
 
-cycle_num = 0
-while cycle_num < NUMBER_OF_CYCLES:
-    LCDcycleTest.cycle(ontime, offtime)
-    LCDcycleTest.status.line[1] = "Cycle number %d of %d" %(NUMBER_OF_CYCLES-cycle_num, NUMBER_OF_CYCLES)
-    LCDcycleTest.status.update_line(1)
-    cycle_num += 1
-    
+
+
+def dwell(ms, on=True):
+    LCDcycleTest.cycle(on_time_ms=ms,on_time_ms=0)
