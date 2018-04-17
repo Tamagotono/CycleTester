@@ -441,17 +441,55 @@ class Encoder:
     def __init__(self):
         pass
 
+class Test:
+    total_time = 0
+    def __init__(self,
+                 on_time: int=0,
+                 off_time: int=0,
+                 pulse_width_ms: int=0,
+                 duty_cycle: float=0,
+                 cycles: int,
+                 periodic_function,
+                 func_call_freq: int=0):
+
+        self.on_time = on_time
+        self.off_time = off_time
+        self.pulse_width_ms = pulse_width_ms
+        self.duty_cycle = duty_cycle
+        self.cycles = cycles
+        self.periodic_function = periodic_function
+        self.func_call_freq = func_call_freq
+
+
+        self.ontime, \
+        self.offtime, \
+        self.pulse_width_ms, \
+        self.duty_cycle = LCDcycleTest.on_off_time_calc(self.on_time_ms,
+                                                        self.off_time_ms,
+                                                        self.pulse_width_ms,
+                                                        self.duty_cycle)
+
+        cycle_num = 0
+        while cycle_num < self.cycles:
+            if cycle_num % func_call_freq == 0:
+                periodic_function()
+            LCDcycleTest.cycle(ontime, offtime)
+            LCDcycleTest.status.line[1] = "Cycle number %d of %d" % (cycle_num, NUMBER_OF_CYCLES)
+            LCDcycleTest.status.update_line(1)
+            cycle_num += 1
+
+
 # def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> str:
 #     """
 #     Args:
-#         milliseconds: The value in milliseconds to format
+#         milliseconds: The value in milliseconds to on_off_time_calc
 #         msPrecision: The number of digits to show for the milliseconds portion of the output.
 #                      Default = 1
 #         verbose: If verbose is True, it will output days, hours, minutes, seconds, milliseconds.
 #                  If verbose is False, it will display only the minimum values needed.
 #                  Default = False
 #
-#     Returns: A string with the converted time in human readable format with the precision specified.
+#     Returns: A string with the converted time in human readable on_off_time_calc with the precision specified.
 #     """
 #     seconds, milliseconds = divmod(milliseconds, 1000)
 #     minutes, seconds = divmod(seconds, 60)
@@ -481,7 +519,7 @@ class Encoder:
 def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> str:
     """
     Args:
-        milliseconds: The value in milliseconds to format
+        milliseconds: The value in milliseconds to on_off_time_calc
         msPrecision: The number of digits to show for the milliseconds portion of the output.
                      Default = 1
         verbose: If verbose is True, it will output days, hours, minutes, seconds, milliseconds.
@@ -490,7 +528,7 @@ def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> st
 
                  If a negative value is entered, it is set to 0
 
-    Returns: A string with the converted time in human readable format with the precision specified.
+    Returns: A string with the converted time in human readable on_off_time_calc with the precision specified.
     """
     years = weeks = days = hours = minutes = 0
 
@@ -576,8 +614,8 @@ def cycle(on_time_ms: int, off_time_ms: int, relay: Relay) -> None:
 
 
 # --------------- in work ----------
-def format(pulse_width_ms: int=1000, duty_cycle:  int=50,
-           on_time_ms:     int=250,  off_time_ms: int=100) -> tuple(int, int):
+def on_off_time_calc(pulse_width_ms: int=1000, duty_cycle:  int=50,
+                     on_time_ms:     int=250, off_time_ms: int=100) -> tuple(int, int, int, float):
     """
     Args:
         pulse_width_ms: The pulse width in milliseconds.
@@ -602,7 +640,12 @@ def format(pulse_width_ms: int=1000, duty_cycle:  int=50,
         pulse_width_ms = int(on_time_ms + off_time_ms)
         duty_cycle = truncate(((on_time_ms / pulse_width_ms) * 100), 2)
 
-    time = ((on_time_ms + off_time_ms) * NUMBER_OF_CYCLES)  ### <-- should not be here, but not sure where is right...
+
+
+    gc.collect()
+    return on_time_ms, off_time_ms, pulse_width_ms, duty_cycle
+
+def update_parameters_pane():
 
     # print("on_time= %d, off_time= %d" % (on_time_ms, off_time_ms))
     test_window.parameters.lines[1] = ("PW   = %s"   % prettyTime(pulse_width_ms))
@@ -610,9 +653,7 @@ def format(pulse_width_ms: int=1000, duty_cycle:  int=50,
     test_window.parameters.lines[3] = ("ON   = %s"   % prettyTime(on_time_ms, 1))
     test_window.parameters.lines[4] = ("OFF  = %s"   % prettyTime(off_time_ms, 1))
     test_window.parameters.lines[5] = ("Time = %s"   % prettyTime(time, 1))
-
-    gc.collect()
-    return (on_time_ms, off_time_ms)
+    time = ((on_time_ms + off_time_ms) * NUMBER_OF_CYCLES)
 
 def importlib(module_name: str, submodule_name: str=None ):
     """
@@ -671,7 +712,7 @@ if __name__ == "LCDcycleTest":
     print("configuring hardware")
     test_window = UI()
 
-    format()
+    on_off_time_calc()
     test_window.parameters.update_all_lines()
 
     #DISPLAY_UPDATE_INTERVAL = const(56)  # Do not set below 56 or the display will not update
@@ -698,7 +739,7 @@ if __name__ == "LCDcycleTest":
     #
     # lcd_title_area()
 
-    #ON_TIME_ms, OFF_TIME_ms = format(PULSE_WIDTH_ms, DUTY_CYCLE, ON_TIME_ms, OFF_TIME_ms)
+    #ON_TIME_ms, OFF_TIME_ms = on_off_time_calc(PULSE_WIDTH_ms, DUTY_CYCLE, ON_TIME_ms, OFF_TIME_ms)
 
     # killPower()  # remove power to make it safe to unload the pcbas
     # # readI(5) #current measurement step
