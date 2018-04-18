@@ -6,3 +6,5 @@ import gc
 #webrepl.start()
 gc.collect()
 
+import sys
+sys.path[1] = '/flash/lib', '/flash/tests', '/sd'
