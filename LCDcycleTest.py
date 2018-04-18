@@ -33,21 +33,23 @@ NOTE:
 
 """
 
-#import machine, display, time,
-import machine, _thread, math
-#import m5stack
+# import machine, display, time,
+# import machine, _thread, math
+# import m5stack
 import utime, machine #Cycle count required imports
-from micropython import const
-import hardware_config
+# from micropython import const
+# import hardware_config
+from hardware_config import M5stack
 import gc
+
+tft, btn_a, btn_b, btn_c = M5stack()  # Initialize the display and all 3 buttons
 
 # ---------------------------------------------
 # -------------GLOBAL VARIABLES----------------
 # ---------------------------------------------
-tft, btn_a, btn_b, btn_c = hardware_config.M5stack()
+
 popupActive = False
 
-NUMBER_OF_CYCLES = 50
 # ---------------------------------------------
 
 
@@ -444,11 +446,11 @@ class Encoder:
 class Test:
     total_time = 0
     def __init__(self,
+                 cycles: int,
                  on_time: int=0,
                  off_time: int=0,
                  pulse_width_ms: int=0,
                  duty_cycle: float=0,
-                 cycles: int,
                  periodic_function = None,
                  func_param = None,
                  func_call_freq: int=0):
@@ -462,7 +464,7 @@ class Test:
         self.func_call_freq = func_call_freq
         self.func_param = func_param
         if self.periodic_function is None:
-            periodic_function = self.pass__
+            self.periodic_function = self.__pass
 
         self.ontime, \
         self.offtime, \
@@ -472,16 +474,20 @@ class Test:
                                                         self.pulse_width_ms,
                                                         self.duty_cycle)
 
+
+    def begin_test(self):
+        gc.collect()
+
         cycle_num = 0
         while cycle_num < self.cycles:
-            if self.func_call_freq > 0 and cycle_num % func_call_freq == 0:
+            if cycle_num % func_call_freq == 0 and self.func_call_freq > 0:
                 periodic_function(func_param)
             LCDcycleTest.cycle(ontime, offtime)
             LCDcycleTest.status.line[1] = "Cycle number %d of %d" % (cycle_num, NUMBER_OF_CYCLES)
             LCDcycleTest.status.update_line(1)
             cycle_num += 1
 
-    def pass__():
+    def __pass():
         """
         Returns:
             Nothing
@@ -718,14 +724,14 @@ if __name__ == "LCDcycleTest":
     gc.enable()
     gc.collect()
 
-    test_module = PCBA32109-TEST.py
+    #test_module = PCBA32109-TEST.py
 
 
     print("configuring hardware")
     test_window = UI()
 
-    on_off_time_calc()
-    test_window.parameters.update_all_lines()
+    #on_off_time_calc()
+    #test_window.parameters.update_all_lines()
 
     #DISPLAY_UPDATE_INTERVAL = const(56)  # Do not set below 56 or the display will not update
     #TOGGLE_PIN_1 = const(4)
@@ -743,7 +749,7 @@ if __name__ == "LCDcycleTest":
     # LCDStatusLine2 = const(90)
     # LCDStatusLine3 = const(100)
 
-    TestConfigFile = 'PCBA-32109Rev6'
+    #TestConfigFile = 'PCBA-32109Rev6'
     # TestConfigFile = 'PCBA-31334'
     # TestConfigFile = 'fastTest'
     # TestConfigFile = 'superFastTest'
