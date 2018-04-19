@@ -1,6 +1,6 @@
 
 def M5stack():
-    import m5stack
+    import lib.m5stack as m5stack
     import display
     import machine
 

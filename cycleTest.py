@@ -103,7 +103,7 @@ class UI:
         self.footer()
 
         # self.__displaytest()
-        # print(__name__)
+        print("test_UI instance created")
         # utime.sleep(10)
         # tft.clear()
         # self.popup.pop_up(220, 180)
@@ -165,8 +165,6 @@ class UI:
             pane.update_all_lines()
         self.footer()
 
-
-
 class DisplayPane:
     def __init__(self,
                  x:int,
@@ -223,7 +221,7 @@ class DisplayPane:
         self.__create_lines(self.num_of_lines)
         self.update_all_lines()
 
-    def line_height_margin_calc(self, margin:int = 10) -> Tuple(int, int):
+    def line_height_margin_calc(self, margin:int=10) -> Tuple(int, int):
         """
         Args:
             margin_pct (int): the percentage of font size for vertical margins
@@ -268,7 +266,7 @@ class DisplayPane:
             tft.font(self.font)
             line_y = (((line_number - 1) * self.line_height) + self.y)
             text_y = line_y + self.text_y
-            #self.__initialize_pane_frame()
+            self.__initialize_pane_frame()
             tft.text(self.x, text_y, self.lines.get(line_number, "ERROR"), self.text_color, transparent=True)
 
     def update_all_lines(self):
@@ -431,8 +429,18 @@ class Relay(machine.Signal):
     def __init__(self, gpio_pin_number: int, inverted=False):
         super().__init__(gpio_pin_number, inverted)
 
+    # def on(self):
+    #     print("click")
+    #     self.on()
+    #
+    # def off(self):
+    #     print("clack")
+    #     self.off()
+
     def toggle(self):
+        print("clickk")
         self.value(not self.value())
+
 
 class Button:
     def __init__(self, gpio_pin_number: int):
@@ -446,6 +454,7 @@ class Encoder:
 class Test:
     total_time = 0
     def __init__(self,
+                 relay: Relay,
                  cycles: int,
                  on_time: int=0,
                  off_time: int=0,
@@ -460,19 +469,17 @@ class Test:
         self.pulse_width_ms = pulse_width_ms
         self.duty_cycle = duty_cycle
         self.cycles = cycles
+        self.relay = relay
         self.periodic_function = periodic_function
         self.func_call_freq = func_call_freq
         self.func_param = func_param
         if self.periodic_function is None:
             self.periodic_function = self.__pass
 
-        self.ontime, \
-        self.offtime, \
-        self.pulse_width_ms, \
-        self.duty_cycle = LCDcycleTest.on_off_time_calc(self.on_time_ms,
-                                                        self.off_time_ms,
-                                                        self.pulse_width_ms,
-                                                        self.duty_cycle)
+        self.ontime, self.offtime, self.pulse_width_ms, self.duty_cycle = on_off_time_calc(on_time,
+                                                                                           off_time,
+                                                                                           pulse_width_ms,
+                                                                                           duty_cycle)
 
 
     def begin_test(self):
@@ -480,14 +487,16 @@ class Test:
 
         cycle_num = 0
         while cycle_num < self.cycles:
-            if cycle_num % func_call_freq == 0 and self.func_call_freq > 0:
-                periodic_function(func_param)
-            LCDcycleTest.cycle(ontime, offtime)
-            LCDcycleTest.status.line[1] = "Cycle number %d of %d" % (cycle_num, NUMBER_OF_CYCLES)
-            LCDcycleTest.status.update_line(1)
+            if self.func_call_freq > 0 and cycle_num % self.func_call_freq == 0:
+                self.periodic_function(self.func_param)
+            cycle(self.on_time, self.off_time, self.relay)
+            print("begin test  " + __name__ + str(cycle_num))
+            from tests.TEST_32109 import test_UI
+            test_UI.status.lines[1] = "Cycle %d of %d" % (cycle_num, self.cycles)
+            test_UI.status.update_line(1)
             cycle_num += 1
 
-    def __pass():
+    def __pass(self):
         """
         Returns:
             Nothing
@@ -495,7 +504,6 @@ class Test:
             Dummy module for use with Test class, in case a func_call_freq is assigned but no function passed.
         """
         pass
-
 
 # def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> str:
 #     """
@@ -630,10 +638,8 @@ def cycle(on_time_ms: int, off_time_ms: int, relay: Relay) -> None:
     relay.off()
     utime.sleep_ms(off_time_ms)
 
-
 # --------------- in work ----------
-def on_off_time_calc(pulse_width_ms: int=1000, duty_cycle:  int=50,
-                     on_time_ms:     int=250, off_time_ms: int=100) -> tuple(int, int, int, float):
+def on_off_time_calc(on_time_ms: int=250, off_time_ms: int=100, pulse_width_ms: int=1000, duty_cycle: float=50,):
     """
     Args:
         pulse_width_ms: The pulse width in milliseconds.
@@ -656,9 +662,7 @@ def on_off_time_calc(pulse_width_ms: int=1000, duty_cycle:  int=50,
         on_time_ms = int(on_time_ms)
         off_time_ms = int(off_time_ms)
         pulse_width_ms = int(on_time_ms + off_time_ms)
-        duty_cycle = truncate(((on_time_ms / pulse_width_ms) * 100), 2)
-
-
+        duty_cycle = float(truncate(((on_time_ms / pulse_width_ms) * 100), 2))
 
     gc.collect()
     return on_time_ms, off_time_ms, pulse_width_ms, duty_cycle
@@ -673,7 +677,7 @@ def update_parameters_pane():
     test_window.parameters.lines[5] = ("Time = %s"   % prettyTime(time, 1))
     time = ((on_time_ms + off_time_ms) * NUMBER_OF_CYCLES)
 
-def importlib(module_name: str, submodule_name: str=None ):
+def importlib(module_name: str, submodule_name: str=None):
     """
     Args:
         module_name (str): Name of module to import
@@ -692,7 +696,6 @@ def importlib(module_name: str, submodule_name: str=None ):
         return __import__(module_name)
     else:
         return __import__(module_name).__getattribute__(submodule_name)
-
 
 #
 
@@ -718,7 +721,6 @@ def importlib(module_name: str, submodule_name: str=None ):
 #     a = m5stack.ButtonA(callback=button_hander_a)
 #     b = m5stack.ButtonB(callback=button_hander_b)
 #     c = m5stack.ButtonC(callback=button_hander_c)
-
 
 if __name__ == "LCDcycleTest":
     gc.enable()
