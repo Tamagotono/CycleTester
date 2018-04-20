@@ -392,15 +392,17 @@ class Test:
     def begin_test(self):
         gc.collect()
 
+        test_UI.status.lines[1] = "Cycle     of"
+        test_UI.status.update_line(1)
+
         cycle_num = 1
         while cycle_num <= self.cycles:
             if self.func_call_freq > 0 and cycle_num % self.func_call_freq == 0:
                 self.periodic_function(self.func_param)
             cycle(self.on_time, self.off_time, self.relay)
             print("begin test  " + __name__ + str(cycle_num))
-            from tests.TEST_32109 import test_UI
-            test_UI.status.lines[1] = "Cycle %d of %d" % (cycle_num, self.cycles)
-            test_UI.status.update_line(1)
+            test_UI.status.lines[3] = " %d  /  %d" % (cycle_num, self.cycles)
+            test_UI.status.update_line(3)
             cycle_num += 1
         test_UI.status.lines[1] = "Completed %d cycles" % (self.cycles)
         test_UI.status.update_line(1)
