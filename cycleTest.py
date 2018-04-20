@@ -167,6 +167,10 @@ class UI:
             pane.update_all_lines()
         self.footer()
 
+class Menu(UI):
+    def __init__(self):
+        pass
+
 class DisplayPane:
     def __init__(self,
                  x:int,
@@ -348,7 +352,6 @@ class Relay(machine.Signal):
         print("clickk")
         self.value(not self.value())
 
-
 class Button:
     def __init__(self, gpio_pin_number: int):
         self.gpio_pin = machine.Pin(gpio_pin_number, machine.Pin.IN, machine.Pin.PULL_UP)
@@ -493,7 +496,6 @@ def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> st
         time=str("%1dy %1dw %1dd %1dh %02dm %02d.%3ds" % (years, weeks, days, hours, minutes, seconds, milliseconds))
     return time
 
-
 def truncate(original_number: float, precision: int=1) -> str:
     """
     Args:
@@ -528,7 +530,6 @@ def cycle(on_time_ms: int, off_time_ms: int, relay: Relay) -> None:
     relay.off()
     utime.sleep_ms(off_time_ms)
 
-# --------------- in work ----------
 def on_off_time_calc(on_time_ms: int=0, off_time_ms: int=0, pulse_width_ms: int=0, duty_cycle: float=0,):
     """
     Args:
@@ -601,4 +602,3 @@ if __name__ == "cycleTest":
     test_UI = UI()
 
     import tests.TEST_32109
-
