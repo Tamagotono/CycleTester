@@ -316,114 +316,6 @@ class DisplayPane:
         tft.clearwin()
         self.func()  # callback function to redraw all panes
 
-    # def printLCD(text, X=0, Y=0, bg_color=0x000000, text_color=0xffffff, transparent=True):
-    #     text = str(text)
-    #     tft.textClear(X, Y, text)
-    #     tft.text(X, Y, text, text_color, transparent=True)
-    #
-
-#
-# class Test:
-#     """
-#     Args:
-#
-#     Note:
-#         Defines the parameters of the test
-#     """
-#     def __init__(self, on_time_ms: int, off_time_ms: int, relay: Relay, button: machine.Signal, display ):
-#         pass
-#
-#     def read_current(seconds: int, relay: Relay) -> None:
-#         printLCD("Enabling DC power", Y=LCDStatusLine1)
-#         relay.on()
-#         printLCD("Dwell for " + str(seconds) + " seconds", Y=LCDStatusLine2)
-#         utime.sleep_ms(seconds * 1000)  # allow time for the readings to stabilize
-#         printLCD("Take measurement now", Y=LCDStatusLine1, Background=0xaaaa)
-#         printLCD("Press Button", Y=LCDStatusLine2, Background=0x0)
-#         printLCD("", Y=LCDStatusLine3, Background=0x0)
-#         while button.value() == 1:
-#             utime.sleep_ms(50)
-#         printLCD("", Y=LCDStatusLine1)
-#         printLCD("", Y=LCDStatusLine2)
-#         printLCD("", Y=LCDStatusLine3)
-#         return
-#
-#     def kill_power():
-#         disable()
-#         printLCD("Power is off", Y=LCDStatusLine1)
-#         printLCD("load/unload PCBA", Y=LCDStatusLine2)
-#         printLCD("Press button", Y=LCDStatusLine3)
-#         while button.value() == 1:
-#             utime.sleep_ms(50)
-#         printLCD("", Y=LCDStatusLine1)
-#         printLCD("", Y=LCDStatusLine2)
-#         printLCD("", Y=LCDStatusLine3)
-#         return
-#
-#     def keep_power_on():
-#         disable()
-#         printLCD("Press button to", Y=LCDStatusLine2)
-#         printLCD("turn power off", Y=LCDStatusLine3)
-#         while button.value() == 1:
-#             utime.sleep_ms(50)
-#         printLCD("", Y=LCDStatusLine1)
-#         printLCD("", Y=LCDStatusLine2)
-#         printLCD("", Y=LCDStatusLine3)
-#         return
-#
-#     def perform_test():
-#         updatesDisabled = False
-#
-#         def updateDisplay(count):
-#             if updatesDisabled == True:
-#                 return
-#             printLCD(str(count) + " of " + str(NUMBER_OF_CYCLES), Y=LCDStatusLine2)
-#             rt = ((ON_TIME_ms + OFF_TIME_ms) * (NUMBER_OF_CYCLES - count))  # rt stands for Remaining Time
-#             rt = prettyTime(rt, verbose=False)
-#             printLCD("Left:" + str(rt), Y=LCDStatusLine3)
-#
-#         printLCD("Test in progress", Y=LCDStatusLine1)
-#         if ON_TIME_ms < DISPLAY_UPDATE_INTERVAL and OFF_TIME_ms < DISPLAY_UPDATE_INTERVAL:
-#             printLCD("Updates Disabled", Y=LCDStatusLine2)
-#             printLCD("Cycles= " + str(NUMBER_OF_CYCLES), Y=LCDStatusLine3)
-#             updatesDisabled = True
-#         else:
-#             updateDisplay(NUMBER_OF_CYCLES)
-#
-#         displayUpdateDue = utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
-#         displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
-#
-#         for count in range(NUMBER_OF_CYCLES):
-#             count += 1
-#             waiting = True
-#             deadline = utime.ticks_add(utime.ticks_ms(), +ON_TIME_ms)
-#
-#             enable()
-#             while waiting == True:
-#                 msRemaining = utime.ticks_diff(utime.ticks_ms(), deadline)
-#                 if msRemaining <= -1:  # the -1 is to allow for calculation time
-#                     displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
-#                     if displayUpdateRemaining >= 0 and msRemaining < -55:  # defer the update if there is not enough time before the next toggle state change
-#                         updateDisplay(count)
-#                         displayUpdateDue = utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
-#                 else:
-#                     waiting = False
-#
-#             disable()
-#             waiting = True
-#             deadline = utime.ticks_add(utime.ticks_ms(), +OFF_TIME_ms)
-#             while waiting == True:
-#                 msRemaining = utime.ticks_diff(utime.ticks_ms(), deadline)
-#                 if msRemaining <= -1:  # the -1 is to allow for calculation time
-#                     displayUpdateRemaining = utime.ticks_diff(utime.ticks_ms(), displayUpdateDue)
-#                     if displayUpdateRemaining >= 0 and msRemaining < -55:  # defer the update if there is not enough time before the next toggle state change
-#                         updateDisplay(count)
-#                         displayUpdateDue = utime.ticks_add(utime.ticks_ms(), DISPLAY_UPDATE_INTERVAL)
-#                 else:
-#                     waiting = False
-#
-#         updateDisplay(count)
-
 class Relay(machine.Signal):
     """
     Notes:
@@ -488,11 +380,6 @@ class Test:
                                                                                            duty_cycle)
 
     def __str__(self):
-        # print("on time = " + str(self.ontime) +
-        #       "\noff time = " + str(self.offtime) +
-        #       "\npulse width = " + str(self.pulse_width_ms) +
-        #       "\nduty cycle = " + str(self.duty_cycle)
-        #       )
 
         return self.on_time, self.off_time, self.pulse_width_ms, self.duty_cycle
 
@@ -532,43 +419,6 @@ class Test:
             Dummy module for use with Test class, in case a func_call_freq is assigned but no function passed.
         """
         pass
-
-# def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> str:
-#     """
-#     Args:
-#         milliseconds: The value in milliseconds to on_off_time_calc
-#         msPrecision: The number of digits to show for the milliseconds portion of the output.
-#                      Default = 1
-#         verbose: If verbose is True, it will output days, hours, minutes, seconds, milliseconds.
-#                  If verbose is False, it will display only the minimum values needed.
-#                  Default = False
-#
-#     Returns: A string with the converted time in human readable on_off_time_calc with the precision specified.
-#     """
-#     seconds, milliseconds = divmod(milliseconds, 1000)
-#     minutes, seconds = divmod(seconds, 60)
-#     hours, minutes = divmod(minutes, 60)
-#     days, hours = divmod(hours, 24)
-#     weeks, days = divmod(days, 7)
-#     years, weeks = divmod(weeks, 52)
-#
-#     time = str("%1dy %1dw %1dd" % (years, weeks, days))
-#     if verbose == False:
-#         if years == 0:
-#             time = str("%1dw %1dd %1dh" % (weeks, days, hours))
-#             if weeks == 0:
-#                 time=str("%1dd %1dh %02dm" % (days, hours, minutes))
-#                 if days == 0:
-#                     time=str("%1dh %02dm %02ds" % (hours, minutes, seconds))
-#                     if hours == 0:
-#                         time=str("%02dm %02ds" % (minutes, seconds))
-#                         if minutes == 0:
-#                             time=str("%04.2fs" % (seconds+(milliseconds/1000)))
-#                             if seconds == 0:
-#                                 time=str("%sms" % truncate(milliseconds, precision=msPrecision))
-#     else:
-#         time=str("%1dy %1dw %1dd %1dh %02dm %02d.%3ds" % (years, weeks, days, hours, minutes, seconds, milliseconds))
-#     return time
 
 def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> str:
     """
@@ -728,31 +578,6 @@ def importlib(module_name: str, submodule_name: str=None):
         return __import__(module_name)
     else:
         return __import__(module_name).__getattribute__(submodule_name)
-
-#
-
-# def load_test_settings(TestConfigFile):
-#     global  TEST_NAME_1, TEST_NAME_2,\
-#             NUMBER_OF_CYCLES,\
-#             PULSE_WIDTH_ms, DUTY_CYCLE,\
-#             ON_TIME_ms, OFF_TIME_ms,\
-#             INVERTED
-#
-#     TestConfig = __import__(TestConfigFile)
-#
-#     TEST_NAME_1 = TestConfig.TEST_NAME_1
-#     TEST_NAME_2 = TestConfig.TEST_NAME_2
-#     NUMBER_OF_CYCLES = TestConfig.NUMBER_OF_CYCLES
-#     PULSE_WIDTH_ms = TestConfig.PULSE_WIDTH_ms
-#     DUTY_CYCLE = TestConfig.DUTY_CYCLE
-#     ON_TIME_ms  = TestConfig.ON_TIME_ms
-#     OFF_TIME_ms = TestConfig.OFF_TIME_ms
-#     INVERTED = TestConfig.INVERTED
-#
-# def m5():
-#     a = m5stack.ButtonA(callback=button_hander_a)
-#     b = m5stack.ButtonB(callback=button_hander_b)
-#     c = m5stack.ButtonC(callback=button_hander_c)
 
 if __name__ == "cycleTest":
     gc.enable()
