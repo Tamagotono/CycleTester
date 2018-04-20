@@ -268,7 +268,7 @@ class DisplayPane:
         """
         global popupActive
 
-        if popupActive == True == self.is_popup:
+        if popupActive == True != self.is_popup:
             return
 
         if font != None:
@@ -313,7 +313,8 @@ class DisplayPane:
         self.x = x_offset
         self.y = y_offset
 
-        self.__initialize_pane()
+        self.__initialize_pane_frame()
+        self.update_all_lines()
 
 
     def pop_down(self):
@@ -410,6 +411,15 @@ class Test:
             cycle_num += 1
         test_UI.status.lines[1] = "Completed %d cycles" % (self.cycles)
         test_UI.status.update_line(1)
+
+        test_UI.popup.lines[1] = "DONE"
+        test_UI.popup.lines[2] = "%d Cycles" % self.cycles
+        test_UI.popup.lines[4] = "You may now "
+        test_UI.popup.lines[5] = "Remove the "
+        test_UI.popup.lines[6] = "board(s)"
+        test_UI.popup.pop_up()
+        # utime.sleep(10)
+        # test_UI.popup.pop_down()
 
     def __pass(self):
         """
