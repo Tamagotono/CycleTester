@@ -41,6 +41,7 @@ import utime, machine #Cycle count required imports
 # import hardware_config
 from hardware_config import M5stack
 import gc
+print("My __name__ is " + __name__)
 
 tft, btn_a, btn_b, btn_c = M5stack()  # Initialize the display and all 3 buttons
 
@@ -72,21 +73,22 @@ class UI:
         self.screenwidth, self.screenheight = tft.screensize()
 
         self.header =     DisplayPane(0, 0, 40, self.screenwidth,
-                                      text_color=tft.BLACK,
+                                      text_color=tft.WHITE,
                                       font=tft.FONT_DejaVu18,
                                       fill_color=tft.BLUE,
                                       frame_color=tft.BLUE)
 
-        self.parameters = DisplayPane(0, 40, 120, self.screenwidth,
+        self.parameters = DisplayPane(0, 40, 90, self.screenwidth,
+                                      text_color=tft.YELLOW,
+                                      fill_color=tft.OLIVE,
+                                      frame_color=tft.OLIVE,
+                                      font=tft.FONT_Ubuntu)
+
+        self.status =     DisplayPane(0, 130, 88, self.screenwidth,
                                       text_color=tft.YELLOW,
                                       fill_color=tft.BLACK,
                                       frame_color=tft.BLACK,
-                                      font=tft.FONT_Default)
-
-        self.status =     DisplayPane(0, 160, 58, self.screenwidth,
-                                      text_color=tft.YELLOW,
-                                      fill_color=tft.DARKGREY,
-                                      frame_color=tft.DARKGREY)
+                                      font=tft.FONT_DejaVu18)
 
         self.popup =      DisplayPane(30, 20, 203, 300,
                                       frame_color = tft.WHITE,
@@ -216,6 +218,10 @@ class DisplayPane:
         tft.roundrect(self.x, self.y, self.frame_width, self.frame_height, self.corner_radius,
                       self.frame_color, self.fill_color)
 
+    def __initialize_pane_line(self, y):
+        tft.roundrect(0, y, self.frame_width, self.line_height, 0,
+                      self.frame_color, self.fill_color)
+
     def __initialize_pane_text(self):
         tft.font(self.font)
         self.__create_lines(self.num_of_lines)
@@ -266,7 +272,7 @@ class DisplayPane:
             tft.font(self.font)
             line_y = (((line_number - 1) * self.line_height) + self.y)
             text_y = line_y + self.text_y
-            self.__initialize_pane_frame()
+            self.__initialize_pane_line(line_y)
             tft.text(self.x, text_y, self.lines.get(line_number, "ERROR"), self.text_color, transparent=True)
 
     def update_all_lines(self):
@@ -464,10 +470,10 @@ class Test:
                  func_param = None,
                  func_call_freq: int=0):
 
-        self.on_time = on_time
-        self.off_time = off_time
-        self.pulse_width_ms = pulse_width_ms
-        self.duty_cycle = duty_cycle
+        # self.on_time = on_time
+        # self.off_time = off_time
+        # self.pulse_width_ms = pulse_width_ms
+        # self.duty_cycle = duty_cycle
         self.cycles = cycles
         self.relay = relay
         self.periodic_function = periodic_function
@@ -476,17 +482,37 @@ class Test:
         if self.periodic_function is None:
             self.periodic_function = self.__pass
 
-        self.ontime, self.offtime, self.pulse_width_ms, self.duty_cycle = on_off_time_calc(on_time,
+        self.on_time, self.off_time, self.pulse_width_ms, self.duty_cycle = on_off_time_calc(on_time,
                                                                                            off_time,
                                                                                            pulse_width_ms,
                                                                                            duty_cycle)
+
+    def __str__(self):
+        # print("on time = " + str(self.ontime) +
+        #       "\noff time = " + str(self.offtime) +
+        #       "\npulse width = " + str(self.pulse_width_ms) +
+        #       "\nduty cycle = " + str(self.duty_cycle)
+        #       )
+
+        return self.on_time, self.off_time, self.pulse_width_ms, self.duty_cycle
+
+
+    def __getitem__(self, item):
+        if   item == 0:
+            return self.on_time
+        elif item == 1:
+            return self.off_time
+        elif item == 2:
+            return self.pulse_width_ms
+        elif item == 3:
+            return self.duty_cycle
 
 
     def begin_test(self):
         gc.collect()
 
-        cycle_num = 0
-        while cycle_num < self.cycles:
+        cycle_num = 1
+        while cycle_num <= self.cycles:
             if self.func_call_freq > 0 and cycle_num % self.func_call_freq == 0:
                 self.periodic_function(self.func_param)
             cycle(self.on_time, self.off_time, self.relay)
@@ -495,6 +521,8 @@ class Test:
             test_UI.status.lines[1] = "Cycle %d of %d" % (cycle_num, self.cycles)
             test_UI.status.update_line(1)
             cycle_num += 1
+        test_UI.status.lines[1] = "Completed %d cycles" % (self.cycles)
+        test_UI.status.update_line(1)
 
     def __pass(self):
         """
@@ -639,7 +667,7 @@ def cycle(on_time_ms: int, off_time_ms: int, relay: Relay) -> None:
     utime.sleep_ms(off_time_ms)
 
 # --------------- in work ----------
-def on_off_time_calc(on_time_ms: int=250, off_time_ms: int=100, pulse_width_ms: int=1000, duty_cycle: float=50,):
+def on_off_time_calc(on_time_ms: int=0, off_time_ms: int=0, pulse_width_ms: int=0, duty_cycle: float=0,):
     """
     Args:
         pulse_width_ms: The pulse width in milliseconds.
@@ -656,13 +684,17 @@ def on_off_time_calc(on_time_ms: int=250, off_time_ms: int=100, pulse_width_ms: 
     Notes:  pulse_width and duty_cycle take priority over any values given for the on_time_ms and off_time_ms.
     """
     if pulse_width_ms != 0:
+        print("pulse width = " + str(pulse_width_ms))
         on_time_ms = int(pulse_width_ms * (duty_cycle / 100))
         off_time_ms = int(pulse_width_ms - on_time_ms)
+        print((on_time_ms, off_time_ms, pulse_width_ms, duty_cycle))
     else:
+        print("on time = " + str(pulse_width_ms))
         on_time_ms = int(on_time_ms)
         off_time_ms = int(off_time_ms)
         pulse_width_ms = int(on_time_ms + off_time_ms)
         duty_cycle = float(truncate(((on_time_ms / pulse_width_ms) * 100), 2))
+        print((on_time_ms, off_time_ms, pulse_width_ms, duty_cycle))
 
     gc.collect()
     return on_time_ms, off_time_ms, pulse_width_ms, duty_cycle
@@ -722,52 +754,14 @@ def importlib(module_name: str, submodule_name: str=None):
 #     b = m5stack.ButtonB(callback=button_hander_b)
 #     c = m5stack.ButtonC(callback=button_hander_c)
 
-if __name__ == "LCDcycleTest":
+if __name__ == "cycleTest":
     gc.enable()
     gc.collect()
 
-    #test_module = PCBA32109-TEST.py
-
-
+    print("Now starting... " + __name__)
     print("configuring hardware")
-    test_window = UI()
 
-    #on_off_time_calc()
-    #test_window.parameters.update_all_lines()
+    test_UI = UI()
 
-    #DISPLAY_UPDATE_INTERVAL = const(56)  # Do not set below 56 or the display will not update
-    #TOGGLE_PIN_1 = const(4)
-    # TOGGLE_PIN_2 = const(11)
-    #
-    # buttonPin = const(0)
-    # ENCODER_PIN_1 = const(9)
-    # ENCODER_PIN_2 = const(10)
+    import tests.TEST_32109
 
-
-    # LCDTitle1 = const(0)
-    # LCDTitle2 = const(10)
-    #
-    # LCDStatusLine1 = const(80)
-    # LCDStatusLine2 = const(90)
-    # LCDStatusLine3 = const(100)
-
-    #TestConfigFile = 'PCBA-32109Rev6'
-    # TestConfigFile = 'PCBA-31334'
-    # TestConfigFile = 'fastTest'
-    # TestConfigFile = 'superFastTest'
-    # loadTestSettings(TestConfigFile)
-    #
-    # lcd_title_area()
-
-    #ON_TIME_ms, OFF_TIME_ms = on_off_time_calc(PULSE_WIDTH_ms, DUTY_CYCLE, ON_TIME_ms, OFF_TIME_ms)
-
-    # killPower()  # remove power to make it safe to unload the pcbas
-    # # readI(5) #current measurement step
-    #
-    # # print (micropython.mem_info())
-    # performTest()
-    #
-    # keepPowerOn()
-    # # readI(5) #read current and leave power on
-    # killPower()  # remove power to make it safe to unload the pcbas
-    # machine.reset()
