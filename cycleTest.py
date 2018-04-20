@@ -72,6 +72,16 @@ class UI:
 
         self.screenwidth, self.screenheight = tft.screensize()
 
+        self.popup =      DisplayPane(30, 20, 203, 300,
+                                      frame_color = tft.WHITE,
+                                      fill_color = tft.BLUE,
+                                      text_color = tft.WHITE,
+                                      font = tft.FONT_DejaVu24,
+                                      is_popup=True,
+                                      corner_radius=0,
+                                      func = self.refresh_all
+                                      )
+
         self.header =     DisplayPane(0, 0, 40, self.screenwidth,
                                       text_color=tft.WHITE,
                                       font=tft.FONT_DejaVu18,
@@ -89,16 +99,6 @@ class UI:
                                       fill_color=tft.BLACK,
                                       frame_color=tft.BLACK,
                                       font=tft.FONT_DejaVu18)
-
-        self.popup =      DisplayPane(30, 20, 203, 300,
-                                      frame_color = tft.WHITE,
-                                      fill_color = tft.BLUE,
-                                      text_color = tft.WHITE,
-                                      font = tft.FONT_DejaVu24,
-                                      is_popup=True,
-                                      corner_radius=0,
-                                      func = self.refresh_all
-                                      )
 
         self.panes = [self.header, self.parameters, self.status]
 
@@ -207,8 +207,10 @@ class DisplayPane:
         tft.set_bg(self.fill_color)
         tft.set_fg(self.text_color)
 
-        self.__create_lines(self.num_of_lines)
-        self.__initialize_pane()
+        if self.is_popup is True:
+            self.__initialize_pane_text()
+        else:
+            self.__initialize_pane()
 
     def __initialize_pane(self):
         self.__initialize_pane_frame()
