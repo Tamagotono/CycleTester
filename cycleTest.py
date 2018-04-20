@@ -79,9 +79,9 @@ class UI:
                                       frame_color=tft.BLUE)
 
         self.parameters = DisplayPane(0, 40, 90, self.screenwidth,
-                                      text_color=tft.YELLOW,
-                                      fill_color=tft.OLIVE,
-                                      frame_color=tft.OLIVE,
+                                      text_color=tft.BLUE,
+                                      fill_color=tft.WHITE,
+                                      frame_color=tft.WHITE,
                                       font=tft.FONT_Ubuntu)
 
         self.status =     DisplayPane(0, 130, 88, self.screenwidth,
@@ -380,12 +380,11 @@ class Test:
                                                                                            duty_cycle)
 
     def __str__(self):
-
-        return self.on_time, self.off_time, self.pulse_width_ms, self.duty_cycle
+        return self.on_time, self.off_time, self.pulse_width_ms, self.duty_cycle, self.cycles
 
 
     def __getitem__(self, item):
-        items = (self.on_time, self.off_time, self.pulse_width_ms, self.duty_cycle)
+        items = (self.on_time, self.off_time, self.pulse_width_ms, self.duty_cycle, self.cycles)
         return items[item]
 
 
@@ -400,7 +399,6 @@ class Test:
             if self.func_call_freq > 0 and cycle_num % self.func_call_freq == 0:
                 self.periodic_function(self.func_param)
             cycle(self.on_time, self.off_time, self.relay)
-            print("begin test  " + __name__ + str(cycle_num))
             test_UI.status.lines[3] = " %d  /  %d" % (cycle_num, self.cycles)
             test_UI.status.update_line(3)
             cycle_num += 1
@@ -545,15 +543,15 @@ def on_off_time_calc(on_time_ms: int=0, off_time_ms: int=0, pulse_width_ms: int=
     gc.collect()
     return on_time_ms, off_time_ms, pulse_width_ms, duty_cycle
 
-def update_parameters_pane():
+def update_parameters_pane(on_time_ms:int, off_time_ms:int, pulse_width_ms:int, duty_cycle:float, cycles:int) ->None:
 
-    # print("on_time= %d, off_time= %d" % (on_time_ms, off_time_ms))
-    test_window.parameters.lines[1] = ("PW   = %s"   % prettyTime(pulse_width_ms))
-    test_window.parameters.lines[2] = ("DS   = %s%%" % str(duty_cycle))
-    test_window.parameters.lines[3] = ("ON   = %s"   % prettyTime(on_time_ms, 1))
-    test_window.parameters.lines[4] = ("OFF  = %s"   % prettyTime(off_time_ms, 1))
-    test_window.parameters.lines[5] = ("Time = %s"   % prettyTime(time, 1))
-    time = ((on_time_ms + off_time_ms) * NUMBER_OF_CYCLES)
+    time = ((on_time_ms + off_time_ms) * cycles)
+    test_UI.parameters.lines[1] = ("PW   = %s"   % prettyTime(pulse_width_ms))
+    test_UI.parameters.lines[2] = ("DS   = %s%%" % str(duty_cycle))
+    test_UI.parameters.lines[3] = ("ON   = %s"   % prettyTime(on_time_ms, 1))
+    test_UI.parameters.lines[4] = ("OFF  = %s"   % prettyTime(off_time_ms, 1))
+    test_UI.parameters.lines[5] = ("Time = %s"   % prettyTime(time, 1))
+    test_UI.parameters.update_all_lines()
 
 def importlib(module_name: str, submodule_name: str=None):
     """
