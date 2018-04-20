@@ -215,10 +215,12 @@ class DisplayPane:
         self.__initialize_pane_text()
 
     def __initialize_pane_frame(self):
+        tft.set_bg(self.fill_color)
         tft.roundrect(self.x, self.y, self.frame_width, self.frame_height, self.corner_radius,
                       self.frame_color, self.fill_color)
 
     def __initialize_pane_line(self, y):
+        tft.set_bg(self.fill_color)
         tft.roundrect(0, y, self.frame_width, self.line_height, 0,
                       self.frame_color, self.fill_color)
 
@@ -255,7 +257,7 @@ class DisplayPane:
             line_num += 1
 #        print(self.lines.items())
 
-    def update_line(self, line_number:int):
+    def update_line(self, line_number:int, font=None):
         """
         Args:
             line_number (int): The line number to update on the display
@@ -268,12 +270,16 @@ class DisplayPane:
 
         if popupActive == True == self.is_popup:
             return
+
+        if font != None:
+            tft.font(font)
         else:
             tft.font(self.font)
-            line_y = (((line_number - 1) * self.line_height) + self.y)
-            text_y = line_y + self.text_y
-            self.__initialize_pane_line(line_y)
-            tft.text(self.x, text_y, self.lines.get(line_number, "ERROR"), self.text_color, transparent=True)
+
+        line_y = (((line_number - 1) * self.line_height) + self.y)
+        text_y = line_y + self.text_y
+        self.__initialize_pane_line(line_y)
+        tft.text(self.x, text_y, self.lines.get(line_number, "ERROR"), self.text_color, transparent=True)
 
     def update_all_lines(self):
         """
@@ -391,7 +397,7 @@ class Test:
     def begin_test(self):
         gc.collect()
 
-        test_UI.status.lines[1] = "Cycle     of"
+        test_UI.status.lines[1] = "Cycle   of"
         test_UI.status.update_line(1)
 
         cycle_num = 1
@@ -399,8 +405,8 @@ class Test:
             if self.func_call_freq > 0 and cycle_num % self.func_call_freq == 0:
                 self.periodic_function(self.func_param)
             cycle(self.on_time, self.off_time, self.relay)
-            test_UI.status.lines[3] = " %d  /  %d" % (cycle_num, self.cycles)
-            test_UI.status.update_line(3)
+            test_UI.status.lines[3] = " %d  :  %d" % (cycle_num, self.cycles)
+            test_UI.status.update_line(3, tft.FONT_7seg)
             cycle_num += 1
         test_UI.status.lines[1] = "Completed %d cycles" % (self.cycles)
         test_UI.status.update_line(1)
