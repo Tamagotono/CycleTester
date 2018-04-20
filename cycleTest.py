@@ -385,14 +385,8 @@ class Test:
 
 
     def __getitem__(self, item):
-        if   item == 0:
-            return self.on_time
-        elif item == 1:
-            return self.off_time
-        elif item == 2:
-            return self.pulse_width_ms
-        elif item == 3:
-            return self.duty_cycle
+        items = (self.on_time, self.off_time, self.pulse_width_ms, self.duty_cycle)
+        return items[item]
 
 
     def begin_test(self):
