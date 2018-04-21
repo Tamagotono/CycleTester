@@ -77,18 +77,6 @@ class UI:
 
         self.screenwidth, self.screenheight = tft.screensize()
 
-        self.menu =              Menu(x=0, y=0,
-                                      frame_height=300,
-                                      frame_width=self.screenwidth,
-                                      frame_color=tft.RED,
-                                      fill_color=tft.BLUE,
-                                      text_color=tft.WHITE,
-                                      font=tft.FONT_Comic,
-                                      is_popup=True,
-                                      corner_radius=20,
-                                      func=self.refresh_all
-                                      )
-
         self.popup =      DisplayPane(30, 20, 203, 300,
                                       frame_color = tft.WHITE,
                                       fill_color = tft.BLUE,
@@ -184,6 +172,49 @@ class UI:
             pane.update_all_lines()
         self.footer()
 
+class Menu_UI(UI):
+    def __init__(self):
+
+        tft.clear()
+
+        self.screenwidth, self.screenheight = tft.screensize()
+
+        self.header = Menu(x=0, y=0,
+                         frame_height=40,
+                         frame_width=self.screenwidth,
+                         frame_color=tft.RED,
+                         fill_color=tft.BLUE,
+                         text_color=tft.WHITE,
+                         font=tft.FONT_Comic,
+                         is_popup=False,
+                         corner_radius=0,
+                         func=self.refresh_all
+                        )
+
+        self.menu = Menu(x=0, y=40,
+                         frame_height=200,
+                         frame_width=self.screenwidth,
+                         frame_color=tft.RED,
+                         fill_color=tft.BLUE,
+                         text_color=tft.WHITE,
+                         font=tft.FONT_DejaVu18,
+                         is_popup=False,
+                         corner_radius=0,
+                         func=self.refresh_all
+                         )
+
+        self.footer()
+        self.header.lines[1] = "Select Test"
+        self.header.update_all_lines()
+
+        # self.__displaytest()
+        print("menu_UI instance created")
+        # utime.sleep(10)
+        # tft.clear()
+        # self.popup.pop_up(220, 180)
+        # utime.sleep(10)
+        # self.popup.pop_down()
+        pass
 
 
 class DisplayPane:
@@ -384,11 +415,11 @@ class Menu(DisplayPane):
         print(files_alpha)
         offset = 0
 
-        self.lines[3] = files_alpha[offset]
-        self.lines[4] = files_alpha[offset+1]
-        self.lines[5] = files_alpha[offset+2]
-        self.lines[6] = files_alpha[offset+3]
-        self.lines[7] = files_alpha[offset+4]
+        self.lines[1] = files_alpha[offset]
+        self.lines[2] = files_alpha[offset+1]
+        self.lines[3] = files_alpha[offset+2]
+        self.lines[4] = files_alpha[offset+3]
+        self.lines[5] = files_alpha[offset+4]
 
         self.update_all_lines()
         pass
@@ -687,10 +718,12 @@ if __name__ == "cycleTest":
     # utime.sleep(10)
     # menu_UI.popup.pop_down()
     #
-    test_UI = UI()
 
-    test_UI.menu.lines[2] = "Select Test"
-    test_UI.menu.pop_up(340,200)
+    menu_UI = Menu_UI()
+    # test_UI = UI()
+    #
+    # menu_UI.header.lines[2] = "SelectTest"
+    # #test_UI.menu.pop_up(340,200)
 #    utime.sleep(10)
 #    test_UI.menu.pop_down()
 
