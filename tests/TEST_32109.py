@@ -1,13 +1,12 @@
 from cycleTest import *
 
-HEADERLINE1 = "Example Test"
-HEADERLINE2 = "Test version 1.1b"
-
 ps_relay = Relay(2)
-PW = 188
-DS = 22
-CYCLES = 100
+PW = 123
+DS = 25
+CYCLES = 88
 
+HEADERLINE1 = "32109 Rev6 Test"
+HEADERLINE2 = "Test version 1.1b"
 
 
 

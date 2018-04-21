@@ -40,7 +40,10 @@ import utime, machine #Cycle count required imports
 # from micropython import const
 # import hardware_config
 from hardware_config import M5stack
+import lib.m5stack as m5stack
 import gc
+import uos as os
+
 print("My __name__ is " + __name__)
 
 tft, btn_a, btn_b, btn_c = M5stack()  # Initialize the display and all 3 buttons
@@ -52,6 +55,8 @@ tft, btn_a, btn_b, btn_c = M5stack()  # Initialize the display and all 3 buttons
 popupActive = False
 
 # ---------------------------------------------
+def null():
+    pass
 
 
 class UI:
@@ -71,6 +76,18 @@ class UI:
         tft.clear()
 
         self.screenwidth, self.screenheight = tft.screensize()
+
+        self.menu =              Menu(x=0, y=0,
+                                      frame_height=300,
+                                      frame_width=self.screenwidth,
+                                      frame_color=tft.RED,
+                                      fill_color=tft.BLUE,
+                                      text_color=tft.WHITE,
+                                      font=tft.FONT_Comic,
+                                      is_popup=True,
+                                      corner_radius=20,
+                                      func=self.refresh_all
+                                      )
 
         self.popup =      DisplayPane(30, 20, 203, 300,
                                       frame_color = tft.WHITE,
@@ -167,9 +184,7 @@ class UI:
             pane.update_all_lines()
         self.footer()
 
-class Menu(UI):
-    def __init__(self):
-        pass
+
 
 class DisplayPane:
     def __init__(self,
@@ -322,12 +337,77 @@ class DisplayPane:
         self.__initialize_pane_frame()
         self.update_all_lines()
 
-
     def pop_down(self):
         global popupActive
         popupActive = False
         tft.clearwin()
         self.func()  # callback function to redraw all panes
+
+
+class Menu(DisplayPane):
+    global tft
+
+    def __init__(self, x: int, y: int, frame_height: int, frame_width: int,
+                 frame_color: int=tft.WHITE, fill_color: int=tft.BLUE,
+                 text_color: int=tft.WHITE, font=tft.FONT_DejaVu18,
+                 is_popup=False,
+                 corner_radius=0,
+                 func=null):
+
+        super().__init__(x, y, frame_height, frame_width, frame_color, fill_color, text_color, font,
+                         is_popup, corner_radius, func)
+        self.mount_sd()
+        #self.get_test_names()
+        self.update_displayed_files()
+
+    def highlight(self, line_num):
+        pass
+
+
+    def move(self, direction):
+        pass
+
+
+    def mount_sd(self):
+        m5stack.sdconfig()
+        try:
+            os.mountsd()
+        except:
+            print("NO SD CARD")
+        utime.sleep_ms(100)
+
+    def update_displayed_files(self):
+        max_displayed_files = self.num_of_lines - 2  # reserving top 2 lines for header
+        files_alpha = []
+        files_alpha = [filename for filename in self.get_test_names()]
+        files_alpha.sort()
+        print(files_alpha)
+        offset = 0
+
+        self.lines[3] = files_alpha[offset]
+        self.lines[4] = files_alpha[offset+1]
+        self.lines[5] = files_alpha[offset+2]
+        self.lines[6] = files_alpha[offset+3]
+        self.lines[7] = files_alpha[offset+4]
+
+        self.update_all_lines()
+        pass
+
+
+    def get_test_names(self):
+        test_files={}
+        try:
+            files = os.listdir('/sd')
+        except:
+            self.mount_sd()
+            print("No SD Card Mounted ... now mounting...")
+
+        for filename in files:
+            if filename[:5] == "TEST_" and filename[-3:].lower() == ".py":
+                test_files[filename[5:-3]] = filename
+
+        print(test_files.items())
+        return test_files
 
 class Relay(machine.Signal):
     """
@@ -417,7 +497,7 @@ class Test:
         test_UI.status.lines[1] = "Completed %d cycles" % (self.cycles)
         test_UI.status.update_line(1)
 
-        test_UI.popup.lines[1] = "DONE"
+        test_UI.popup.lines[1] = "TEST COMPLETE"
         test_UI.popup.lines[2] = "%d Cycles" % self.cycles
         test_UI.popup.lines[4] = "You may now "
         test_UI.popup.lines[5] = "Remove the "
@@ -434,6 +514,11 @@ class Test:
             Dummy module for use with Test class, in case a func_call_freq is assigned but no function passed.
         """
         pass
+
+class SD:
+    def __init__(self):
+        m5stack.sdconfig()
+
 
 def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> str:
     """
@@ -599,6 +684,17 @@ if __name__ == "cycleTest":
     print("Now starting... " + __name__)
     print("configuring hardware")
 
+    # utime.sleep(10)
+    # menu_UI.popup.pop_down()
+    #
     test_UI = UI()
 
-    import tests.TEST_32109
+    test_UI.menu.lines[2] = "Select Test"
+    test_UI.menu.pop_up(340,200)
+#    utime.sleep(10)
+#    test_UI.menu.pop_down()
+
+
+#    popupActive = False
+
+#    import tests.TEST_32109
