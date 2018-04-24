@@ -36,7 +36,7 @@ NOTE:
 # import machine, display, time,
 # import machine, _thread, math
 # import m5stack
-import utime, machine #Cycle count required imports
+import utime, machine  # Cycle count required imports
 # from micropython import const
 # import hardware_config
 from hardware_config import M5stack
@@ -59,7 +59,7 @@ def null():
     pass
 
 
-class Test_UI:
+class TestUI:
     """
     Args:
         title_size (int): The number of lines for the Title pane. Default = 1
@@ -78,32 +78,35 @@ class Test_UI:
         self.screenwidth, self.screenheight = tft.screensize()
 
         self.popup =      DisplayPane(30, 20, 203, 300,
-                                      frame_color = tft.WHITE,
-                                      fill_color = tft.BLUE,
-                                      text_color = tft.WHITE,
-                                      font = tft.FONT_DejaVu24,
+                                      frame_color=tft.WHITE,
+                                      fill_color=tft.BLUE,
+                                      text_color=tft.WHITE,
+                                      font=tft.FONT_DejaVu24,
                                       is_popup=True,
                                       corner_radius=0,
-                                      func = self.refresh_all
+                                      func=self.refresh_all
                                       )
 
         self.header =     DisplayPane(0, 0, 40, self.screenwidth,
                                       text_color=tft.WHITE,
                                       font=tft.FONT_DejaVu18,
                                       fill_color=tft.BLUE,
-                                      frame_color=tft.BLUE)
+                                      frame_color=tft.BLUE
+                                      )
 
         self.parameters = DisplayPane(0, 40, 90, self.screenwidth,
                                       text_color=tft.BLUE,
                                       fill_color=tft.WHITE,
                                       frame_color=tft.WHITE,
-                                      font=tft.FONT_Ubuntu)
+                                      font=tft.FONT_Ubuntu
+                                      )
 
         self.status =     DisplayPane(0, 130, 88, self.screenwidth,
                                       text_color=tft.YELLOW,
                                       fill_color=tft.BLACK,
                                       frame_color=tft.BLACK,
-                                      font=tft.FONT_DejaVu18)
+                                      font=tft.FONT_DejaVu18
+                                      )
 
         self.panes = [self.header, self.parameters, self.status]
 
@@ -141,7 +144,6 @@ class Test_UI:
             i += 1
         self.status.update_all_lines()
 
-
     def footer(self):
         """
         Returns:
@@ -153,13 +155,13 @@ class Test_UI:
         tft.rect(  0, 220, self.screenwidth, 30, tft.YELLOW, tft.YELLOW)
 
         tft.rect( 25, 220, 80, 30, tft.BLUE, tft.BLUE)
-        tft.text( 50, 222,   "UP", tft.WHITE, transparent=True)
+        tft.text( 50, 222, "UP", tft.WHITE, transparent=True)
 
         tft.rect(120, 220, 80, 30, tft.BLUE, tft.BLUE)
         tft.text(125, 222, "DOWN", tft.WHITE, transparent=True)
 
         tft.rect(215, 220, 80, 30, tft.BLUE, tft.BLUE)
-        tft.text(230, 222,  "SEL", tft.WHITE, transparent=True)
+        tft.text(230, 222, "SEL", tft.WHITE, transparent=True)
 
     def refresh_all(self):
         """
@@ -172,7 +174,7 @@ class Test_UI:
             pane.update_all_lines()
         self.footer()
 
-class Menu_UI(Test_UI):
+class MenuUI(TestUI):
     def __init__(self):
 
         tft.clear()
@@ -180,16 +182,16 @@ class Menu_UI(Test_UI):
         self.screenwidth, self.screenheight = tft.screensize()
 
         self.header = Menu(x=0, y=0,
-                         frame_height=40,
-                         frame_width=self.screenwidth,
-                         frame_color=tft.RED,
-                         fill_color=tft.BLUE,
-                         text_color=tft.WHITE,
-                         font=tft.FONT_Comic,
-                         is_popup=False,
-                         corner_radius=0,
-                         func=self.refresh_all
-                        )
+                           frame_height=40,
+                           frame_width=self.screenwidth,
+                           frame_color=tft.RED,
+                           fill_color=tft.BLUE,
+                           text_color=tft.WHITE,
+                           font=tft.FONT_Comic,
+                           is_popup=False,
+                           corner_radius=0,
+                           func=self.refresh_all
+                           )
 
         self.menu = Menu(x=0, y=40,
                          frame_height=200,
@@ -219,17 +221,17 @@ class Menu_UI(Test_UI):
 
 class DisplayPane:
     def __init__(self,
-                 x:int,
-                 y:int,
-                 frame_height:int,
-                 frame_width:int,
-                 frame_color:int = tft.WHITE,
-                 fill_color:int = tft.BLUE,
-                 text_color:int = tft.WHITE,
-                 font = tft.FONT_DejaVu18,
-                 is_popup = False,
-                 corner_radius = 0,
-                 func = None
+                 x: int,
+                 y: int,
+                 frame_height: int,
+                 frame_width: int,
+                 frame_color: int=tft.WHITE,
+                 fill_color: int=tft.BLUE,
+                 text_color: int=tft.WHITE,
+                 font=tft.FONT_DejaVu18,
+                 is_popup=False,
+                 corner_radius=0,
+                 func=None
                  ):
 
         self.x = x
@@ -281,12 +283,12 @@ class DisplayPane:
         self.__create_lines(self.num_of_lines)
         self.update_all_lines()
 
-    def line_height_margin_calc(self, margin:int=10) -> Tuple(int, int):
+    def line_height_margin_calc(self, margin: int=10) -> Tuple(int, int):
         """
         Args:
-            margin_pct (int): the percentage of font size for vertical margins
+            margin (int): the percentage of font size for vertical margins
         Returns:
-            The total hight of the line in pixels
+            The total height of the line in pixels
             The number of pixels used above the font used for margins, to set the vertical offset for text_y
         """
         margin_pct = margin/100
@@ -296,7 +298,7 @@ class DisplayPane:
 #        print("line_height_margin_calc: line_height_px = " + str(line_height_px) + 'margin:' + str(margin/2))
         return line_height_px, int(margin_px/4)
 
-    def __create_lines(self, num_of_lines:int):
+    def __create_lines(self, num_of_lines: int):
         """
         Args:
             num_of_lines (int): initializes the dictionary of the text for each line number
@@ -309,7 +311,7 @@ class DisplayPane:
             line_num += 1
 #        print(self.lines.items())
 
-    def update_line(self, line_number:int, font=None):
+    def update_line(self, line_number: int, font=None):
         """
         Args:
             line_number (int): The line number to update on the display
@@ -320,10 +322,10 @@ class DisplayPane:
         """
         global popupActive
 
-        if popupActive == True != self.is_popup:
+        if popupActive is True is not self.is_popup:
             return
 
-        if font != None:
+        if font is not None:
             tft.font(font)
         else:
             tft.font(self.font)
@@ -346,7 +348,7 @@ class DisplayPane:
             self.update_line(line_num)
             line_num += 1
 
-    def pop_up(self, popup_width:int=260, popup_height: int=200):
+    def pop_up(self, popup_width: int=260, popup_height: int=200):
         global popupActive
         popupActive = True
         tft.clearwin(tft.YELLOW)
@@ -404,7 +406,6 @@ class Menu(DisplayPane):
         self.update_line(line_num)
         self.lines[line_num] = self.lines[line_num][2:]  # reset currently highlighted line back to normal but don't update the display
 
-
     def scroll(self, direction: str):
         if direction == "up" and self.offset > 0:
             self.offset -= 1
@@ -413,8 +414,6 @@ class Menu(DisplayPane):
 
         self.lines[0:self.aperture_size] = self.test_names_list[self.offset:(self.offset + self.aperture_size)]
         self.update_all_lines()
-
-
 
     def mount_sd(self):
         m5stack.sdconfig()
@@ -441,9 +440,9 @@ class Menu(DisplayPane):
         self.update_all_lines()
         pass
 
-
     def get_test_names(self):
-        test_files={}
+        files = []
+        test_files = {}
         try:
             files = os.listdir('/sd')
         except:
@@ -465,7 +464,7 @@ class Relay(machine.Signal):
     Adds:
         toggle: Inverts the current state of the pin.
     """
-    def __init__(self, gpio_pin_number: int, inverted=False):
+    def __init__(self, gpio_pin_number: Pin, inverted=False):
         super().__init__(gpio_pin_number, inverted)
 
     # def on(self):
@@ -491,6 +490,7 @@ class Encoder:
 
 class Test:
     total_time = 0
+
     def __init__(self,
                  relay: Relay,
                  cycles: int,
@@ -498,8 +498,8 @@ class Test:
                  off_time: int=0,
                  pulse_width_ms: int=0,
                  duty_cycle: float=0,
-                 periodic_function = None,
-                 func_param = None,
+                 periodic_function=None,
+                 func_param=None,
                  func_call_freq: int=0):
 
         # self.on_time = on_time
@@ -515,18 +515,16 @@ class Test:
             self.periodic_function = self.__pass
 
         self.on_time, self.off_time, self.pulse_width_ms, self.duty_cycle = on_off_time_calc(on_time,
-                                                                                           off_time,
-                                                                                           pulse_width_ms,
-                                                                                           duty_cycle)
+                                                                                             off_time,
+                                                                                             pulse_width_ms,
+                                                                                             duty_cycle)
 
     def __str__(self):
         return self.on_time, self.off_time, self.pulse_width_ms, self.duty_cycle, self.cycles
 
-
     def __getitem__(self, item):
         items = (self.on_time, self.off_time, self.pulse_width_ms, self.duty_cycle, self.cycles)
         return items[item]
-
 
     def begin_test(self):
         gc.collect()
@@ -542,7 +540,7 @@ class Test:
             test_UI.status.lines[3] = " %d  :  %d" % (cycle_num, self.cycles)
             test_UI.status.update_line(3, tft.FONT_7seg)
             cycle_num += 1
-        test_UI.status.lines[1] = "Completed %d cycles" % (self.cycles)
+        test_UI.status.lines[1] = "Completed %d cycles" % self.cycles
         test_UI.status.update_line(1)
 
         test_UI.popup.lines[1] = "TEST COMPLETE"
@@ -568,11 +566,11 @@ class SD:
         m5stack.sdconfig()
 
 
-def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> str:
+def pretty_time(milliseconds: int, precision_ms: int=1, verbose: bool=False) -> str:
     """
     Args:
         milliseconds: The value in milliseconds to on_off_time_calc
-        msPrecision: The number of digits to show for the milliseconds portion of the output.
+        precision_ms: The number of digits to show for the milliseconds portion of the output.
                      Default = 1
         verbose: If verbose is True, it will output days, hours, minutes, seconds, milliseconds.
                  If verbose is False, it will display only the minimum values needed.
@@ -587,10 +585,10 @@ def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> st
     if milliseconds < 0:
         milliseconds = 0  # No negatives for you ...
 
-    if verbose == False:
+    if not verbose:
 
         if milliseconds < 1000:
-            time = str("%sms" % truncate(milliseconds, precision=msPrecision))
+            time = str("%sms" % truncate(milliseconds, precision=precision_ms))
         elif milliseconds < 60000:  # less than 1 minute
             time = str("%04.2fs" % (milliseconds / 1000))
         elif milliseconds < 3600000:  # less than 1 hour
@@ -626,7 +624,7 @@ def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> st
         weeks, days = divmod(days, 7)
         years, weeks = divmod(weeks, 52)
 
-        time=str("%1dy %1dw %1dd %1dh %02dm %02d.%3ds" % (years, weeks, days, hours, minutes, seconds, milliseconds))
+        time = str("%1dy %1dw %1dd %1dh %02dm %02d.%3ds" % (years, weeks, days, hours, minutes, seconds, milliseconds))
     return time
 
 def truncate(original_number: float, precision: int=1) -> str:
@@ -640,8 +638,8 @@ def truncate(original_number: float, precision: int=1) -> str:
 
     Notes: This has to return a string due to the accuracy in the MCU causing numbers to have too many digits.
     """
-    precision=int(precision)
-    if precision>0:
+    precision = int(precision)
+    if precision > 0:
         temp = str(float(original_number)).split('.')  # float to force a decimal point, string to split.
         temp[1] = temp[1]+('0'*precision)  # make sure we have enough digits for the next step.
         truncated_number = temp[0]+'.'+temp[1][:precision]
@@ -695,14 +693,16 @@ def on_off_time_calc(on_time_ms: int=0, off_time_ms: int=0, pulse_width_ms: int=
     gc.collect()
     return on_time_ms, off_time_ms, pulse_width_ms, duty_cycle
 
-def update_parameters_pane(on_time_ms:int, off_time_ms:int, pulse_width_ms:int, duty_cycle:float, cycles:int) ->None:
+def update_parameters_pane(on_time_ms: int, off_time_ms: int,
+                           pulse_width_ms: int, duty_cycle: float,
+                           cycles: int) -> None:
 
     time = ((on_time_ms + off_time_ms) * cycles)
-    test_UI.parameters.lines[1] = ("PW   = %s"   % prettyTime(pulse_width_ms))
+    test_UI.parameters.lines[1] = ("PW   = %s" % pretty_time(pulse_width_ms))
     test_UI.parameters.lines[2] = ("DS   = %s%%" % str(duty_cycle))
-    test_UI.parameters.lines[3] = ("ON   = %s"   % prettyTime(on_time_ms, 1))
-    test_UI.parameters.lines[4] = ("OFF  = %s"   % prettyTime(off_time_ms, 1))
-    test_UI.parameters.lines[5] = ("Time = %s"   % prettyTime(time, 1))
+    test_UI.parameters.lines[3] = ("ON   = %s" % pretty_time(on_time_ms, 1))
+    test_UI.parameters.lines[4] = ("OFF  = %s" % pretty_time(off_time_ms, 1))
+    test_UI.parameters.lines[5] = ("Time = %s" % pretty_time(time, 1))
     test_UI.parameters.update_all_lines()
 
 def importlib(module_name: str, submodule_name: str=None):
@@ -725,6 +725,7 @@ def importlib(module_name: str, submodule_name: str=None):
     else:
         return __import__(module_name).__getattribute__(submodule_name)
 
+
 if __name__ == "cycleTest":
     gc.enable()
     gc.collect()
@@ -736,8 +737,8 @@ if __name__ == "cycleTest":
     # menu_UI.popup.pop_down()
     #
 
-    menu_UI = Menu_UI()
-    # test_UI = Test_UI()
+    menu_UI = MenuUI()
+    # test_UI = TestUI()
     #
     # menu_UI.header.lines[2] = "SelectTest"
     # #test_UI.menu.pop_up(340,200)
