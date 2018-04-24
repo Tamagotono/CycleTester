@@ -400,8 +400,24 @@ class Menu(DisplayPane):
 
         self.update_displayed_files()
 
-    def highlight(self, line_num: int):
+    def move(self, direction: str):
+        if 0 < self.offset > self.aperture_size:
+                self.highlight(direction)
+        else:
+            self.scroll(direction)
+            self.highlight()
+
+    def highlight(self, direction: str = ""):
         self.update_line(self.highlighted)  # finally update the previous line that was highlighted then reset
+
+        if direction == "up":
+            line_num = self.highlighted + 1
+        elif direction == "down":
+            line_num = self.highlighted - 1
+        else:
+            line_num = self.highlighted
+        
+        self.highlighted = line_num
         self.lines[line_num] = ("=> " + str(self.lines[line_num]))
         self.update_line(line_num)
         self.lines[line_num] = self.lines[line_num][2:]  # reset currently highlighted line back to normal but don't update the display
