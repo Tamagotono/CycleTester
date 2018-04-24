@@ -394,14 +394,18 @@ class Menu(DisplayPane):
         self.aperture_size = self.num_of_lines-2
         self.num_of_files = len(self.test_names_list)
         self.offset = 0
+        self.highlighted = 0
 
         self.update_displayed_files()
 
-    def highlight(self, line_num):
-        pass
+    def highlight(self, line_num: int):
+        self.update_line(self.highlighted)  # finally update the previous line that was highlighted then reset
+        self.lines[line_num] = ("=> " + str(self.lines[line_num]))
+        self.update_line(line_num)
+        self.lines[line_num] = self.lines[line_num][2:]  # reset currently highlighted line back to normal but don't update the display
 
 
-    def scroll(self, direction):
+    def scroll(self, direction: str):
         if direction == "up" and self.offset > 0:
             self.offset -= 1
         elif direction == "down" and (self.num_of_files - self.offset) > self.aperture_size:
