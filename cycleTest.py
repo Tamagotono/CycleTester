@@ -388,15 +388,28 @@ class Menu(DisplayPane):
         super().__init__(x, y, frame_height, frame_width, frame_color, fill_color, text_color, font,
                          is_popup, corner_radius, func)
         self.mount_sd()
-        #self.get_test_names()
+        self.test_names_dict = self.get_test_names()
+        self.test_names_list = [name for name in self.test_names_dict]
+        self.test_names_list.sort()
+        self.aperture_size = self.num_of_lines-2
+        self.num_of_files = len(self.test_names_list)
+        self.offset = 0
+
         self.update_displayed_files()
 
     def highlight(self, line_num):
         pass
 
 
-    def move(self, direction):
-        pass
+    def scroll(self, direction):
+        if direction == "up" and self.offset > 0:
+            self.offset -= 1
+        elif direction == "down" and (self.num_of_files - self.offset) > self.aperture_size:
+            self.offset += 1
+
+        self.lines[0:self.aperture_size] = self.test_names_list[self.offset:(self.offset + self.aperture_size)]
+        self.update_all_lines()
+
 
 
     def mount_sd(self):
