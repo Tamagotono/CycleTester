@@ -106,7 +106,7 @@ print("performing Setup")
 #     OFF_TIME_ms = TestConfig.OFF_TIME_ms
 #     INVERTED = TestConfig.INVERTED
 
-# def format(PULSE_WIDTH_ms=1000, DUTY_CYCLE=50, ON_TIME_ms=250, OFF_TIME_ms=100):
+# def on_off_time_calc(PULSE_WIDTH_ms=1000, DUTY_CYCLE=50, ON_TIME_ms=250, OFF_TIME_ms=100):
 #     '''This function properly configures the ON_TIME_ms and OFF_TIME_ms based on the configuration settings given '''
 #     if PULSE_WIDTH_ms != 0:
 #         ON_TIME_ms = int(PULSE_WIDTH_ms*(DUTY_CYCLE/100))

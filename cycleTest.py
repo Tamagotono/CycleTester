@@ -59,7 +59,7 @@ def null():
     pass
 
 
-class UI:
+class Test_UI:
     """
     Args:
         title_size (int): The number of lines for the Title pane. Default = 1
@@ -172,7 +172,7 @@ class UI:
             pane.update_all_lines()
         self.footer()
 
-class Menu_UI(UI):
+class Menu_UI(Test_UI):
     def __init__(self):
 
         tft.clear()
@@ -737,7 +737,7 @@ if __name__ == "cycleTest":
     #
 
     menu_UI = Menu_UI()
-    # test_UI = UI()
+    # test_UI = Test_UI()
     #
     # menu_UI.header.lines[2] = "SelectTest"
     # #test_UI.menu.pop_up(340,200)
