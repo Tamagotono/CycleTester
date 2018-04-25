@@ -206,7 +206,7 @@ class MenuUI(TestUI):
                          )
 
         self.footer()
-        self.header.lines[1] = "Select Test"
+        self.header.lines[0] = "Select Test"
         self.header.update_all_lines()
 
         # self.__displaytest()
@@ -254,7 +254,7 @@ class DisplayPane:
         # print("self.frameheight = " + str(self.frame_height))
         # print("lineheight =" + str(self.line_height))
         # print("num of lines = " + str(self.num_of_lines))
-        self.lines = {}
+        self.lines = []
 
         tft.set_bg(self.fill_color)
         tft.set_fg(self.text_color)
@@ -307,7 +307,7 @@ class DisplayPane:
         """
         line_num = 1
         while line_num <= num_of_lines:
-            self.lines[line_num] = str('')
+            self.lines.append(str(''))
             line_num += 1
 #        print(self.lines.items())
 
@@ -333,7 +333,7 @@ class DisplayPane:
         line_y = (((line_number - 1) * self.line_height) + self.y)
         text_y = line_y + self.text_y
         self.__initialize_pane_line(line_y)
-        tft.text(self.x, text_y, self.lines.get(line_number, "ERROR"), self.text_color, transparent=True)
+        tft.text(self.x, text_y, str(self.lines[line_number:(line_number+1)])[2:-2], self.text_color, transparent=True)
 
     def update_all_lines(self):
         """
@@ -393,12 +393,13 @@ class Menu(DisplayPane):
         self.test_names_dict = self.get_test_names()
         self.test_names_list = [name for name in self.test_names_dict]
         self.test_names_list.sort()
-        self.aperture_size = self.num_of_lines-2
+        self.aperture_size = self.num_of_lines
         self.num_of_files = len(self.test_names_list)
         self.offset = 0
         self.highlighted = 0
 
-        self.update_displayed_files()
+        #self.update_displayed_files()
+        self.move("up")  # initial activation of the display and highlighted line.
 
     def move(self, direction: str):
         if 0 < self.offset > self.aperture_size:
@@ -416,7 +417,7 @@ class Menu(DisplayPane):
             line_num = self.highlighted - 1
         else:
             line_num = self.highlighted
-        
+
         self.highlighted = line_num
         self.lines[line_num] = ("=> " + str(self.lines[line_num]))
         self.update_line(line_num)
@@ -427,6 +428,11 @@ class Menu(DisplayPane):
             self.offset -= 1
         elif direction == "down" and (self.num_of_files - self.offset) > self.aperture_size:
             self.offset += 1
+
+        print("aperture_size = " + str(self.aperture_size))
+        print("offset = " + str(self.offset))
+        print("test_names_list = " + str(self.test_names_list))
+        print("lines = " + str(self.lines))
 
         self.lines[0:self.aperture_size] = self.test_names_list[self.offset:(self.offset + self.aperture_size)]
         self.update_all_lines()
@@ -714,11 +720,11 @@ def update_parameters_pane(on_time_ms: int, off_time_ms: int,
                            cycles: int) -> None:
 
     time = ((on_time_ms + off_time_ms) * cycles)
-    test_UI.parameters.lines[1] = ("PW   = %s" % pretty_time(pulse_width_ms))
-    test_UI.parameters.lines[2] = ("DS   = %s%%" % str(duty_cycle))
-    test_UI.parameters.lines[3] = ("ON   = %s" % pretty_time(on_time_ms, 1))
-    test_UI.parameters.lines[4] = ("OFF  = %s" % pretty_time(off_time_ms, 1))
-    test_UI.parameters.lines[5] = ("Time = %s" % pretty_time(time, 1))
+    test_UI.parameters.lines[0:1] = [("PW   = %s" % pretty_time(pulse_width_ms))]
+    test_UI.parameters.lines[1:2] = [("DS   = %s%%" % str(duty_cycle))]
+    test_UI.parameters.lines[2:3] = [("ON   = %s" % pretty_time(on_time_ms, 1))]
+    test_UI.parameters.lines[3:4] = [("OFF  = %s" % pretty_time(off_time_ms, 1))]
+    test_UI.parameters.lines[4:5] = [("Time = %s" % pretty_time(time, 1))]
     test_UI.parameters.update_all_lines()
 
 def importlib(module_name: str, submodule_name: str=None):
@@ -754,8 +760,10 @@ if __name__ == "cycleTest":
     #
 
     menu_UI = MenuUI()
-    # test_UI = TestUI()
-    #
+    utime.sleep(10)
+    test_UI = TestUI()
+    import tests.TEST_32109
+
     # menu_UI.header.lines[2] = "SelectTest"
     # #test_UI.menu.pop_up(340,200)
 #    utime.sleep(10)

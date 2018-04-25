@@ -28,8 +28,8 @@ Round2 = Test(relay=ps_relay, pulse_width_ms=PW, duty_cycle=DS, cycles=CYCLES)
 header = test_UI.header
 parameters = test_UI.parameters
 
-header.lines[1] = HEADERLINE1
-header.lines[2] = HEADERLINE2
+header.lines[0:1] = [HEADERLINE1]
+header.lines[1:2] = [HEADERLINE2]
 header.update_all_lines()
 
 
