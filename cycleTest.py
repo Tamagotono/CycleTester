@@ -406,7 +406,7 @@ class Menu(DisplayPane):
     def move(self, direction: str):
         print("move activated in the direction of " + str(direction))
         if 0 < self.offset < self.aperture_size:
-                self.__highlight(direction)
+            self.__highlight(direction)
         else:
             self.__scroll(direction)
             self.__highlight()
@@ -414,15 +414,15 @@ class Menu(DisplayPane):
     def __highlight(self, direction: str = ""):
         self.update_line(self.highlighted)  # finally update the previous line that was highlighted then reset
 
-        if direction == "up":
+        if direction == "up" and self.highlighted > 0:
             line_num = self.highlighted - 1
-        elif direction == "down":
+        elif direction == "down" and self.highlighted < self.num_of_files:
             line_num = self.highlighted + 1
         else:
             line_num = self.highlighted
 
         self.highlighted = line_num
-        self.lines[line_num] = ("=> " + str(self.lines[line_num]))
+        self.lines[line_num] = ("> " + str(self.lines[line_num]))
         self.update_line(line_num)
         self.lines[line_num] = self.lines[line_num][2:]  # reset currently highlighted line back to normal but don't update the display
 
@@ -437,7 +437,7 @@ class Menu(DisplayPane):
         print("test_names_list = " + str(self.test_names_list))
         print("lines = " + str(self.lines))
 
-        self.lines[0:self.aperture_size] = self.test_names_list[self.offset:(self.offset + self.aperture_size)]
+        self.lines[0:self.aperture_size+1] = self.test_names_list[self.offset:(self.offset + self.aperture_size+1)]
         self.update_all_lines()
 
     def mount_sd(self):
@@ -757,7 +757,7 @@ if __name__ == "cycleTest":
 
     print("Now starting... " + __name__)
     print("configuring hardware")
-    #b = machine.Signal(machine.Pin(38, machine.Pin.IN))
+
     btn_a = machine.Signal(machine.Pin(m5stack.BUTTON_A_PIN, machine.Pin.IN), invert=True)
     btn_b = machine.Signal(m5stack.Pin(m5stack.BUTTON_B_PIN, machine.Pin.IN), invert=True)
     btn_c = machine.Signal(m5stack.Pin(m5stack.BUTTON_C_PIN, machine.Pin.IN), invert=True)
@@ -765,17 +765,17 @@ if __name__ == "cycleTest":
     menu_UI = MenuUI()
     x = True
     while x:
-        utime.sleep_ms(50)
+        utime.sleep_ms(100)
         # print("btn a = " + str(btn_a.value()))
         # print("btn_b = " + str(btn_b.value()))
 
         if btn_a.value() == 1:
-            print("movin up")
             menu_UI.menu.move_up()
+            print(menu_UI.menu.num_of_files, menu_UI.menu.aperture_size, menu_UI.menu.offset)
 
         elif btn_b.value() == 1:
-            print("movin down")
             menu_UI.menu.move_down()
+            print(menu_UI.menu.num_of_files, menu_UI.menu.aperture_size, menu_UI.menu.offset)
 
 
     # utime.sleep(10)
