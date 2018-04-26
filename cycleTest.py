@@ -46,7 +46,8 @@ import uos as os
 
 print("My __name__ is " + __name__)
 
-tft, btn_a, btn_b, btn_c = M5stack()  # Initialize the display and all 3 buttons
+# tft, btn_a, btn_b, btn_c = M5stack()  # Initialize the display and all 3 buttons
+tft = M5stack()  # Initialize the display and all 3 buttons
 
 # ---------------------------------------------
 # -------------GLOBAL VARIABLES----------------
@@ -120,6 +121,7 @@ class TestUI:
         # utime.sleep(10)
         self.popup.pop_down()
 
+
     def __displaytest(self):
         """
         FOR TESTING PURPOSES ONLY
@@ -174,51 +176,6 @@ class TestUI:
             pane.update_all_lines()
         self.footer()
 
-class MenuUI(TestUI):
-    def __init__(self):
-
-        tft.clear()
-
-        self.screenwidth, self.screenheight = tft.screensize()
-
-        self.header = Menu(x=0, y=0,
-                           frame_height=40,
-                           frame_width=self.screenwidth,
-                           frame_color=tft.RED,
-                           fill_color=tft.BLUE,
-                           text_color=tft.WHITE,
-                           font=tft.FONT_Comic,
-                           is_popup=False,
-                           corner_radius=0,
-                           func=self.refresh_all
-                           )
-
-        self.menu = Menu(x=0, y=40,
-                         frame_height=200,
-                         frame_width=self.screenwidth,
-                         frame_color=tft.RED,
-                         fill_color=tft.BLUE,
-                         text_color=tft.WHITE,
-                         font=tft.FONT_DejaVu18,
-                         is_popup=False,
-                         corner_radius=0,
-                         func=self.refresh_all
-                         )
-
-        self.footer()
-        self.header.lines[0] = "Select Test"
-        self.header.update_all_lines()
-
-        # self.__displaytest()
-        print("menu_UI instance created")
-        # utime.sleep(10)
-        # tft.clear()
-        # self.popup.pop_up(220, 180)
-        # utime.sleep(10)
-        # self.popup.pop_down()
-        pass
-
-
 class DisplayPane:
     def __init__(self,
                  x: int,
@@ -246,7 +203,7 @@ class DisplayPane:
         self.corner_radius = corner_radius
         tft.font(self.font)
         self.func = func
-        self.line_height, self.text_y = self.line_height_margin_calc(10)
+        self.line_height, self.text_y = self.line_height_margin_calc(30)
         self.num_of_lines = int(self.frame_height / self.line_height)
         # print(str(self.font))
         # print("self.x = " + str(self.x))
@@ -276,7 +233,7 @@ class DisplayPane:
     def __initialize_pane_line(self, y):
         tft.set_bg(self.fill_color)
         tft.roundrect(0, y, self.frame_width, self.line_height, 0,
-                      self.frame_color, self.fill_color)
+                      self.fill_color, self.fill_color)
 
     def __initialize_pane_text(self):
         tft.font(self.font)
@@ -293,10 +250,8 @@ class DisplayPane:
         """
         margin_pct = margin/100
         font_height = int(tft.fontSize()[1])
-        margin_px = int(font_height)
         line_height_px = int(font_height * (1 + margin_pct))
-#        print("line_height_margin_calc: line_height_px = " + str(line_height_px) + 'margin:' + str(margin/2))
-        return line_height_px, int(margin_px/4)
+        return line_height_px, int((line_height_px - font_height)/2)
 
     def __create_lines(self, num_of_lines: int):
         """
@@ -330,7 +285,7 @@ class DisplayPane:
         else:
             tft.font(self.font)
 
-        line_y = (((line_number - 1) * self.line_height) + self.y)
+        line_y = ((line_number * self.line_height) + self.y)
         text_y = line_y + self.text_y
         self.__initialize_pane_line(line_y)
         tft.text(self.x, text_y, str(self.lines[line_number:(line_number+1)])[2:-2], self.text_color, transparent=True)
@@ -343,7 +298,7 @@ class DisplayPane:
             Quick way to update all lines in the pane
         """
         self.__initialize_pane_frame()
-        line_num = 1
+        line_num = 0
         while line_num <= self.num_of_lines:
             self.update_line(line_num)
             line_num += 1
@@ -376,6 +331,46 @@ class DisplayPane:
         tft.clearwin()
         self.func()  # callback function to redraw all panes
 
+class MenuUI(TestUI):
+    def __init__(self):
+
+        tft.clear()
+
+        self.screenwidth, self.screenheight = tft.screensize()
+
+        self.header = DisplayPane(x=0, y=0,
+                           frame_height=30,
+                           frame_width=self.screenwidth,
+                           frame_color=tft.BLACK,
+                           fill_color=tft.WHITE,
+                           text_color=tft.BLUE,
+                           font=tft.FONT_Comic,
+                           is_popup=False,
+                           corner_radius=0,
+                           func=self.refresh_all
+                           )
+
+        self.menu = Menu(x=0, y=37,
+                         frame_height=180,
+                         frame_width=self.screenwidth,
+                         frame_color=tft.RED,
+                         fill_color=tft.BLUE,
+                         text_color=tft.WHITE,
+                         font=tft.FONT_DejaVu18,
+                         is_popup=False,
+                         corner_radius=0,
+                         func=self.refresh_all
+                         )
+
+        self.footer()
+        self.header.lines[0:1] = ["Select Test"]
+        self.header.update_all_lines()
+        #utime.sleep(3)
+        self.menu.update_displayed_files()
+        self.menu.move("up")  # initial activation of the display and highlighted line.
+
+        # self.__displaytest()
+        print("menu_UI instance created")
 
 class Menu(DisplayPane):
     global tft
@@ -398,23 +393,31 @@ class Menu(DisplayPane):
         self.offset = 0
         self.highlighted = 0
 
-        #self.update_displayed_files()
-        self.move("up")  # initial activation of the display and highlighted line.
+
+    def move_up(self):
+        self.move("up")
+        m5stack.tone(1800, duration=10, volume=1)
+
+    def move_down(self):
+        self.move("down")
+        m5stack.tone(1800, duration=10, volume=1)
+
 
     def move(self, direction: str):
-        if 0 < self.offset > self.aperture_size:
-                self.highlight(direction)
+        print("move activated in the direction of " + str(direction))
+        if 0 < self.offset < self.aperture_size:
+                self.__highlight(direction)
         else:
-            self.scroll(direction)
-            self.highlight()
+            self.__scroll(direction)
+            self.__highlight()
 
-    def highlight(self, direction: str = ""):
+    def __highlight(self, direction: str = ""):
         self.update_line(self.highlighted)  # finally update the previous line that was highlighted then reset
 
         if direction == "up":
-            line_num = self.highlighted + 1
-        elif direction == "down":
             line_num = self.highlighted - 1
+        elif direction == "down":
+            line_num = self.highlighted + 1
         else:
             line_num = self.highlighted
 
@@ -423,7 +426,7 @@ class Menu(DisplayPane):
         self.update_line(line_num)
         self.lines[line_num] = self.lines[line_num][2:]  # reset currently highlighted line back to normal but don't update the display
 
-    def scroll(self, direction: str):
+    def __scroll(self, direction: str):
         if direction == "up" and self.offset > 0:
             self.offset -= 1
         elif direction == "down" and (self.num_of_files - self.offset) > self.aperture_size:
@@ -475,7 +478,7 @@ class Menu(DisplayPane):
             if filename[:5] == "TEST_" and filename[-3:].lower() == ".py":
                 test_files[filename[5:-3]] = filename
 
-        print(test_files.items())
+#        print(test_files.items())
         return test_files
 
 class Relay(machine.Signal):
@@ -754,15 +757,30 @@ if __name__ == "cycleTest":
 
     print("Now starting... " + __name__)
     print("configuring hardware")
-
-    # utime.sleep(10)
-    # menu_UI.popup.pop_down()
-    #
+    #b = machine.Signal(machine.Pin(38, machine.Pin.IN))
+    btn_a = machine.Signal(machine.Pin(m5stack.BUTTON_A_PIN, machine.Pin.IN), invert=True)
+    btn_b = machine.Signal(m5stack.Pin(m5stack.BUTTON_B_PIN, machine.Pin.IN), invert=True)
+    btn_c = machine.Signal(m5stack.Pin(m5stack.BUTTON_C_PIN, machine.Pin.IN), invert=True)
 
     menu_UI = MenuUI()
-    utime.sleep(10)
-    test_UI = TestUI()
-    import tests.TEST_32109
+    x = True
+    while x:
+        utime.sleep_ms(50)
+        # print("btn a = " + str(btn_a.value()))
+        # print("btn_b = " + str(btn_b.value()))
+
+        if btn_a.value() == 1:
+            print("movin up")
+            menu_UI.menu.move_up()
+
+        elif btn_b.value() == 1:
+            print("movin down")
+            menu_UI.menu.move_down()
+
+
+    # utime.sleep(10)
+    # test_UI = TestUI()
+    # import tests.TEST_32109
 
     # menu_UI.header.lines[2] = "SelectTest"
     # #test_UI.menu.pop_up(340,200)

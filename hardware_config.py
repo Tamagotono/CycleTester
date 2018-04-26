@@ -47,10 +47,10 @@ def M5stack():
             )
             m5stack.tone(1800, duration=10, volume=1)
 
-    return tft,\
-           m5stack.ButtonA(callback=button_hander_a),\
-           m5stack.ButtonB(callback=button_hander_b),\
-           m5stack.ButtonC(callback=button_hander_c)
+    return tft
+           # m5stack.ButtonA(callback=button_hander_a),\
+           # m5stack.ButtonB(callback=button_hander_b),\
+           # m5stack.ButtonC(callback=button_hander_c)
 
 def ESP32_WROVER_KIT_v3():
     import display
