@@ -367,7 +367,8 @@ class MenuUI(TestUI):
         self.header.update_all_lines()
         #utime.sleep(3)
         #self.menu.move("up")  # initial activation of the display and highlighted line.
-        self.menu._scroll("up")
+        self.menu._scroll("down")
+        self.menu._highlight()
 
         # self.__displaytest()
         print("menu_UI instance created")
@@ -395,25 +396,25 @@ class Menu(DisplayPane):
 
 
     def move_up(self):
-        self.__highlight("up")
+        self._highlight("up")
         m5stack.tone(1800, duration=10, volume=1)
 
     def move_down(self):
-        self.__highlight("down")
+        self._highlight("down")
         m5stack.tone(1800, duration=10, volume=1)
 
 
     def move(self, direction: str):
         print("move activated in the direction of " + str(direction))
         if 0 < self.offset < self.aperture_size:
-            self.__highlight(direction)
+            self._highlight(direction)
         # elif self.offset == 0 and self.highlighted == 0:
-        #     self.__highlight()
+        #     self._highlight()
         else:
             # self._scroll(direction)
-            self.__highlight()
+            self._highlight()
 
-    def __highlight(self, direction: str = ""):
+    def _highlight(self, direction: str = ""):
         self.update_line(self.highlighted)  # finally update the previous line that was highlighted then reset
 
         if direction == "up" and self.highlighted > 0:
