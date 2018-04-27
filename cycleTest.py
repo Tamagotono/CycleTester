@@ -366,8 +366,8 @@ class MenuUI(TestUI):
         self.header.lines[0:1] = ["Select Test"]
         self.header.update_all_lines()
         #utime.sleep(3)
-        self.menu.update_displayed_files()
-        self.menu.move("up")  # initial activation of the display and highlighted line.
+        #self.menu.move("up")  # initial activation of the display and highlighted line.
+        self.menu._scroll("up")
 
         # self.__displaytest()
         print("menu_UI instance created")
@@ -395,11 +395,11 @@ class Menu(DisplayPane):
 
 
     def move_up(self):
-        self.move("up")
+        self.__highlight("up")
         m5stack.tone(1800, duration=10, volume=1)
 
     def move_down(self):
-        self.move("down")
+        self.__highlight("down")
         m5stack.tone(1800, duration=10, volume=1)
 
 
@@ -407,8 +407,10 @@ class Menu(DisplayPane):
         print("move activated in the direction of " + str(direction))
         if 0 < self.offset < self.aperture_size:
             self.__highlight(direction)
+        # elif self.offset == 0 and self.highlighted == 0:
+        #     self.__highlight()
         else:
-            self.__scroll(direction)
+            # self._scroll(direction)
             self.__highlight()
 
     def __highlight(self, direction: str = ""):
@@ -416,29 +418,46 @@ class Menu(DisplayPane):
 
         if direction == "up" and self.highlighted > 0:
             line_num = self.highlighted - 1
-        elif direction == "down" and self.highlighted < self.num_of_files:
-            line_num = self.highlighted + 1
-        else:
+
+        elif direction == "up" and self.highlighted == 0 and self.offset > 0:
+            self._scroll("down")
             line_num = self.highlighted
+
+        elif direction == "down" and self.highlighted < self.aperture_size:
+            line_num = self.highlighted + 1
+
+        elif direction == "down" and self.highlighted == self.aperture_size and (self.offset+self.aperture_size) < (self.num_of_files-1):
+            self._scroll("up")
+            line_num = self.highlighted
+
+        else:
+            line_num = self.highlighted  # Used to just re-draw the highlight marker on existing line
 
         self.highlighted = line_num
         self.lines[line_num] = ("> " + str(self.lines[line_num]))
         self.update_line(line_num)
         self.lines[line_num] = self.lines[line_num][2:]  # reset currently highlighted line back to normal but don't update the display
 
-    def __scroll(self, direction: str):
-        if direction == "up" and self.offset > 0:
+        print("test names = " + str(self.test_names_list))
+        print("aperture size = " + str(self.aperture_size))
+        print("Num of files = " + str(self.num_of_files))
+        print("offset = " + str(self.offset))
+        print("highlighted = " + str(self.highlighted))
+
+    def _scroll(self, direction: str):
+        if direction == "down" and self.offset > 0:
             self.offset -= 1
-        elif direction == "down" and (self.num_of_files - self.offset) > self.aperture_size:
+        elif direction == "up" and (self.num_of_files - self.offset) > self.aperture_size:
             self.offset += 1
 
-        print("aperture_size = " + str(self.aperture_size))
-        print("offset = " + str(self.offset))
-        print("test_names_list = " + str(self.test_names_list))
-        print("lines = " + str(self.lines))
+        # print("aperture_size = " + str(self.aperture_size))
+        # print("offset = " + str(self.offset))
+        # print("test_names_list = " + str(self.test_names_list))
+        # print("lines = " + str(self.lines))
 
         self.lines[0:self.aperture_size+1] = self.test_names_list[self.offset:(self.offset + self.aperture_size+1)]
         self.update_all_lines()
+
 
     def mount_sd(self):
         m5stack.sdconfig()
@@ -449,20 +468,20 @@ class Menu(DisplayPane):
         utime.sleep_ms(100)
 
     def update_displayed_files(self):
-        max_displayed_files = self.num_of_lines - 2  # reserving top 2 lines for header
-        files_alpha = []
-        files_alpha = [filename for filename in self.get_test_names()]
-        files_alpha.sort()
-        print(files_alpha)
-        offset = 0
-
-        self.lines[1] = files_alpha[offset]
-        self.lines[2] = files_alpha[offset+1]
-        self.lines[3] = files_alpha[offset+2]
-        self.lines[4] = files_alpha[offset+3]
-        self.lines[5] = files_alpha[offset+4]
-
-        self.update_all_lines()
+        # max_displayed_files = self.num_of_lines
+        # files_alpha = []
+        # files_alpha = [filename for filename in self.get_test_names()]
+        # files_alpha.sort()
+        # print(files_alpha)
+        # offset = 0
+        #
+        # self.lines[1] = files_alpha[offset]
+        # self.lines[2] = files_alpha[offset+1]
+        # self.lines[3] = files_alpha[offset+2]
+        # self.lines[4] = files_alpha[offset+3]
+        # self.lines[5] = files_alpha[offset+4]
+        #
+        # self.update_all_lines()
         pass
 
     def get_test_names(self):
