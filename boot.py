@@ -7,4 +7,6 @@ import gc
 gc.collect()
 
 import sys
-sys.path[1] = '/flash/lib', '/flash/tests', '/sd'
+mypath = ['/flash/lib', '/flash/tests', '/sd', '/sd/tests']
+for folder in mypath:
+    sys.path.append(folder)
