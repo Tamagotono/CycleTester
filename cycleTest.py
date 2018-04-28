@@ -401,7 +401,7 @@ class Menu(DisplayPane):
 
     def move_down(self):
         self._highlight("down")
-        m5stack.tone(1800, duration=10, volume=1)
+        m5stack.tone(1400, duration=10, volume=1)
 
 
     def move(self, direction: str):
@@ -574,25 +574,25 @@ class Test:
     def begin_test(self):
         gc.collect()
 
-        test_UI.status.lines[1] = "Cycle   of"
-        test_UI.status.update_line(1)
+        test_UI.status.lines[0] = "Cycle   of"
+        test_UI.status.update_line(0)
 
         cycle_num = 1
         while cycle_num <= self.cycles:
             if self.func_call_freq > 0 and cycle_num % self.func_call_freq == 0:
                 self.periodic_function(self.func_param)
             cycle(self.on_time, self.off_time, self.relay)
-            test_UI.status.lines[3] = " %d  :  %d" % (cycle_num, self.cycles)
-            test_UI.status.update_line(3, tft.FONT_7seg)
+            test_UI.status.lines[2] = " %d  :  %d" % (cycle_num, self.cycles)
+            test_UI.status.update_line(2, tft.FONT_7seg)
             cycle_num += 1
         test_UI.status.lines[1] = "Completed %d cycles" % self.cycles
         test_UI.status.update_line(1)
 
-        test_UI.popup.lines[1] = "TEST COMPLETE"
-        test_UI.popup.lines[2] = "%d Cycles" % self.cycles
-        test_UI.popup.lines[4] = "You may now "
-        test_UI.popup.lines[5] = "Remove the "
-        test_UI.popup.lines[6] = "board(s)"
+        test_UI.popup.lines[0] = "TEST COMPLETE"
+        test_UI.popup.lines[1] = "%d Cycles" % self.cycles
+        test_UI.popup.lines[2] = "You may now "
+        test_UI.popup.lines[3] = "Remove the "
+        test_UI.popup.lines[4] = "board(s)"
         test_UI.popup.pop_up()
         # utime.sleep(10)
         # test_UI.popup.pop_down()
@@ -785,7 +785,7 @@ if __name__ == "cycleTest":
     menu_UI = MenuUI()
     x = True
     while x:
-        utime.sleep_ms(100)
+        utime.sleep_ms(150)
         # print("btn a = " + str(btn_a.value()))
         # print("btn_b = " + str(btn_b.value()))
 
@@ -796,6 +796,13 @@ if __name__ == "cycleTest":
         elif btn_b.value() == 1:
             menu_UI.menu.move_down()
             print(menu_UI.menu.num_of_files, menu_UI.menu.aperture_size, menu_UI.menu.offset)
+
+        elif btn_c.value() == 1:
+            test_file_to_import = menu_UI.menu.test_names_dict[menu_UI.menu.test_names_list[menu_UI.menu.highlighted]]
+            print(str(test_file_to_import))
+            m5stack.tone(2000, duration=15, volume=1)
+            test_UI = TestUI()
+            importlib(test_file_to_import[:-3])
 
 
     # utime.sleep(10)
