@@ -106,7 +106,7 @@ print("performing Setup")
 #     OFF_TIME_ms = TestConfig.OFF_TIME_ms
 #     INVERTED = TestConfig.INVERTED
 
-# def format(PULSE_WIDTH_ms=1000, DUTY_CYCLE=50, ON_TIME_ms=250, OFF_TIME_ms=100):
+# def on_off_time_calc(PULSE_WIDTH_ms=1000, DUTY_CYCLE=50, ON_TIME_ms=250, OFF_TIME_ms=100):
 #     '''This function properly configures the ON_TIME_ms and OFF_TIME_ms based on the configuration settings given '''
 #     if PULSE_WIDTH_ms != 0:
 #         ON_TIME_ms = int(PULSE_WIDTH_ms*(DUTY_CYCLE/100))
@@ -119,11 +119,11 @@ print("performing Setup")
 #
 #     time=( (ON_TIME_ms+OFF_TIME_ms)*NUMBER_OF_CYCLES )
 #
-#     printLCD("PW  = "+prettyTime(PULSE_WIDTH_ms), Y=LCDParamLine1 )
+#     printLCD("PW  = "+pretty_time(PULSE_WIDTH_ms), Y=LCDParamLine1 )
 #     printLCD("DS  = "+str(DUTY_CYCLE)+"%", Y=LCDParamLine2 )
-#     printLCD("ON  = "+prettyTime(ON_TIME_ms, 3), Y=LCDParamLine3 )
-#     printLCD("OFF = "+prettyTime(OFF_TIME_ms, 3), Y=LCDParamLine4 )
-#     printLCD("Time= "+prettyTime(time, 3), Y=LCDParamLine5 )
+#     printLCD("ON  = "+pretty_time(ON_TIME_ms, 3), Y=LCDParamLine3 )
+#     printLCD("OFF = "+pretty_time(OFF_TIME_ms, 3), Y=LCDParamLine4 )
+#     printLCD("Time= "+pretty_time(time, 3), Y=LCDParamLine5 )
 #
 #     global enable, disable
 #     if INVERTED == True:
@@ -198,7 +198,7 @@ print("performing Setup")
 #         truncNum = int(num)
 #     return truncNum
 
-# def prettyTime(milliseconds, msPrecision=1, verbose=False):
+# def pretty_time(milliseconds, msPrecision=1, verbose=False):
 #     '''convert milliseconds to a pretty output.
 #     If verbose is True, it will output days, hours, minutes, seconds, milliseconds
 #     If verbose is False, it will display only the minimum values needed'''
@@ -250,7 +250,7 @@ print("performing Setup")
 #             return
 #         printLCD(str(count) + " of " + str(NUMBER_OF_CYCLES) ,Y=LCDStatusLine2)
 #         rt=( (ON_TIME_ms + OFF_TIME_ms)*(NUMBER_OF_CYCLES-count) ) # rt stands for Remaining Time
-#         rt=prettyTime(rt, verbose=False)
+#         rt=pretty_time(rt, verbose=False)
 #         printLCD("Left:" + str(rt), Y=LCDStatusLine3 )
 #
 #     printLCD("Test in progress",Y=LCDStatusLine1)

@@ -1,6 +1,15 @@
 from cycleTest import *
 
 ps_relay = Relay(2)
+PW = 123
+DS = 25
+CYCLES = 88
+
+HEADERLINE1 = "32109 Rev6 Test"
+HEADERLINE2 = "Test version 1.1b"
+
+
+
 
 def dwell(ms, on=True):
     if on is True:
@@ -11,14 +20,16 @@ def dwell(ms, on=True):
 #Round1 = cycleTest.Test(relay=ps_relay, on_time=20, off_time=100, cycles=1000,
  #                       periodic_function=dwell, func_param=300, func_call_freq=100)
 
-Round2 = Test(relay=ps_relay, pulse_width_ms=1111, duty_cycle=22, cycles=100)
+
+
+Round2 = Test(relay=ps_relay, pulse_width_ms=PW, duty_cycle=DS, cycles=CYCLES)
 
 
 header = test_UI.header
 parameters = test_UI.parameters
 
-header.lines[1] = "32109 Rev6 Test"
-header.lines[2] = "Test version 1.1b"
+header.lines[0:1] = [HEADERLINE1]
+header.lines[1:2] = [HEADERLINE2]
 header.update_all_lines()
 
 
