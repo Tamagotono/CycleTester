@@ -31,14 +31,14 @@ class Button:
 def prettyTime(milliseconds: int, msPrecision: int=1, verbose: bool=False) -> str:
     """
     Args:
-        milliseconds: The value in milliseconds to format
+        milliseconds: The value in milliseconds to on_off_time_calc
         msPrecision: The number of digits to show for the milliseconds portion of the output.
                      Default = 1
         verbose: If verbose is True, it will output days, hours, minutes, seconds, milliseconds.
                  If verbose is False, it will display only the minimum values needed.
                  Default = False
 
-    Returns: A string with the converted time in human readable format with the precision specified.
+    Returns: A string with the converted time in human readable on_off_time_calc with the precision specified.
     """
     seconds, milliseconds = divmod(milliseconds, 1000)
     minutes, seconds = divmod(seconds, 60)
